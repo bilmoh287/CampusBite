@@ -1,3 +1,4 @@
+using CampusBite.Data;
 using CampusBite.ViewModels;
 using CampusBite.Views;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,9 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+        // Register Database Context
+        builder.Services.AddDbContext<AppDbContext>();
+
         // Register ViewModels
         builder.Services.AddTransient<MainViewModel>();
 
@@ -27,6 +31,15 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        var app = builder.Build();
+
+        // Initialize SQLite database and seed initial campus data on startup
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            dbContext.Database.EnsureCreated();
+        }
+
+        return app;
     }
 }
