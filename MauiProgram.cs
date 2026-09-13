@@ -1,4 +1,6 @@
 using CampusBite.Data;
+using CampusBite.Services.Implementations;
+using CampusBite.Services.Interfaces;
 using CampusBite.ViewModels;
 using CampusBite.Views;
 using Microsoft.Extensions.Logging;
@@ -21,11 +23,16 @@ public static class MauiProgram
         // Register Database Context
         builder.Services.AddDbContext<AppDbContext>();
 
+        // Register Services
+        builder.Services.AddScoped<ICafeService, CafeService>();
+
         // Register ViewModels
         builder.Services.AddTransient<MainViewModel>();
+        builder.Services.AddTransient<CafeListViewModel>();
 
         // Register Views
         builder.Services.AddTransient<MainPage>();
+        builder.Services.AddTransient<CafeListPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

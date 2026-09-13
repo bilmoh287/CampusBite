@@ -6,9 +6,11 @@
     xmlns:views="clr-namespace:CampusBite.Views"
     Title="CampusBite">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate views:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Cafés"
+            ContentTemplate="{DataTemplate views:CafeListPage}"
+            Route="CafeListPage" />
+    </TabBar>
 
 </Shell>
