@@ -25,14 +25,17 @@ public static class MauiProgram
 
         // Register Services
         builder.Services.AddScoped<ICafeService, CafeService>();
+        builder.Services.AddScoped<IProductService, ProductService>();
 
         // Register ViewModels
         builder.Services.AddTransient<MainViewModel>();
         builder.Services.AddTransient<CafeListViewModel>();
+        builder.Services.AddTransient<CafeMenuViewModel>();
 
         // Register Views
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<CafeListPage>();
+        builder.Services.AddTransient<CafeMenuPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

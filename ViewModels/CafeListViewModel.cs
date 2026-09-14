@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CampusBite.Models;
 using CampusBite.Services.Interfaces;
+using CampusBite.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -50,7 +51,11 @@ public partial class CafeListViewModel : ObservableObject
     {
         if (cafe == null) return;
 
-        // Navigation to CafeMenuPage will be wired up in Version 1.3!
-        await Shell.Current.DisplayAlert("Café Selected", $"You selected '{cafe.Name}'. Menu page coming in Version 1.3!", "OK");
+        var navigationParameter = new Dictionary<string, object>
+        {
+            { "Cafe", cafe }
+        };
+
+        await Shell.Current.GoToAsync(nameof(CafeMenuPage), navigationParameter);
     }
 }
