@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:CampusBite.ViewModels"
+             xmlns:models="clr-namespace:CampusBite.Models.UI"
+             x:Class="CampusBite.Views.CheckoutPage"
+             x:DataType="viewmodels:CheckoutViewModel"
+             Title="Checkout"
+             BackgroundColor="#121212">
+
+    <Grid RowDefinitions="*, Auto">
+
+        <!-- Scrollable Checkout Form -->
+        <ScrollView Grid.Row="0" Padding="16">
+            <VerticalStackLayout Spacing="20">
+
+                <!-- Header Banner -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Finalize Your Order 📝" FontSize="20" FontAttributes="Bold" TextColor="White"/>
+                        <Label Text="Choose pickup or campus delivery and confirm your item list." FontSize="13" TextColor="#AAAAAA"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Order Type Selection -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Order Type" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                        <!-- Pickup Option -->
+                        <Border Grid.Column="0"
+                                BackgroundColor="#1E1E1E"
+                                StrokeThickness="1"
+                                Stroke="#333333"
+                                Padding="12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsPickupSelected}" Value="True">
+                                    <Setter Property="Stroke" Value="#FF9800" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                    <Setter Property="BackgroundColor" Value="#2A1F10" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectOrderTypeCommand}" CommandParameter="Pickup"/>
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Label Text="🚶 Pickup" FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                                <Label Text="Collect at Cafe" FontSize="11" TextColor="#AAAAAA" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Delivery Option -->
+                        <Border Grid.Column="1"
+                                BackgroundColor="#1E1E1E"
+                                StrokeThickness="1"
+                                Stroke="#333333"
+                                Padding="12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsDeliverySelected}" Value="True">
+                                    <Setter Property="Stroke" Value="#FF9800" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                    <Setter Property="BackgroundColor" Value="#2A1F10" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectOrderTypeCommand}" CommandParameter="Delivery"/>
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Label Text="🛵 Delivery" FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                                <Label Text="+$2.50 fee" FontSize="11" TextColor="#FF9800" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- Campus Delivery Location Input (Conditional) -->
+                <VerticalStackLayout Spacing="8" IsVisible="{Binding IsDeliverySelected}">
+                    <Label Text="Campus Delivery Location" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                    <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="12,4">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding DeliveryLocation}"
+                               Placeholder="e.g. Science Building, 2nd Floor Room 204"
+                               PlaceholderColor="#666666"
+                               TextColor="White"
+                               FontSize="14"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Special Notes Input -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Special Instructions / Notes (Optional)" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                    <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="12,4">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding Notes}"
+                               Placeholder="e.g. Extra napkins, call upon arrival"
+                               PlaceholderColor="#666666"
+                               TextColor="White"
+                               FontSize="14"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Items Review Summary -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Items Summary" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                    <Border BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="16">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="12">
+                            <CollectionView ItemsSource="{Binding CartItems}" SelectionMode="None">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:CartItem">
+                                        <Grid ColumnDefinitions="*, Auto, Auto" Padding="0,6" ColumnSpacing="12">
+                                            <Label Grid.Column="0" Text="{Binding Product.Name}" FontSize="14" TextColor="White" VerticalOptions="Center"/>
+                                            <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="14" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                                            <Label Grid.Column="2" Text="{Binding TotalPrice, StringFormat='${0:F2}'}" FontSize="14" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <BoxView HeightRequest="1" Color="#333333"/>
+
+                            <!-- Bill Breakdown -->
+                            <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="6">
+                                <Label Grid.Row="0" Grid.Column="0" Text="Subtotal" FontSize="13" TextColor="#AAAAAA"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Subtotal, StringFormat='${0:F2}'}" FontSize="13" TextColor="White"/>
+
+                                <Label Grid.Row="1" Grid.Column="0" Text="Delivery Fee" FontSize="13" TextColor="#AAAAAA"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding DeliveryFee, StringFormat='${0:F2}'}" FontSize="13" TextColor="White"/>
+
+                                <Label Grid.Row="2" Grid.Column="0" Text="Total Amount" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="18" FontAttributes="Bold" TextColor="#FF9800"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Action Bar -->
+        <Border Grid.Row="1" BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="16">
+            <Grid ColumnDefinitions="*, Auto">
+                <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                    <Label Text="Total Due" FontSize="12" TextColor="#AAAAAA"/>
+                    <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="20" FontAttributes="Bold" TextColor="#FF9800"/>
+                </VerticalStackLayout>
+
+                <Button Grid.Column="1"
+                        Text="Confirm &amp; Place Order 🚀"
+                        Command="{Binding PlaceOrderCommand}"
+                        IsEnabled="{Binding IsNotProcessing}"
+                        BackgroundColor="#FF9800"
+                        TextColor="Black"
+                        FontAttributes="Bold"
+                        CornerRadius="22"
+                        Padding="24,12"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</ContentPage>

@@ -86,7 +86,6 @@ public partial class CartViewModel : ObservableObject
             return;
         }
 
-        // Stub ready for CheckoutPage in Version 1.4.2!
-        await Shell.Current.DisplayAlertAsync("Proceed to Checkout", $"Cart Total: ${TotalAmount:F2}. Checkout workflow coming in Version 1.4.2!", "OK");
+        await Shell.Current.GoToAsync(nameof(CheckoutPage));
     }
 }
