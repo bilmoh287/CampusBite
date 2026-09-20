@@ -16,6 +16,11 @@
             Title="Cart"
             ContentTemplate="{DataTemplate views:CartPage}"
             Route="CartPage" />
+
+        <ShellContent
+            Title="Orders"
+            ContentTemplate="{DataTemplate views:OrderHistoryPage}"
+            Route="OrderHistoryPage" />
     </TabBar>
 
 </Shell>

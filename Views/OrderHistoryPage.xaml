@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CampusBite.ViewModels"
+             xmlns:models="clr-namespace:CampusBite.Models"
+             x:Class="CampusBite.Views.OrderHistoryPage"
+             x:DataType="vm:OrderHistoryViewModel"
+             Title="My Orders 📋"
+             BackgroundColor="#121212">
+
+    <Grid>
+        <!-- Pull to Refresh Container -->
+        <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadOrdersCommand}"
+                     RefreshColor="#FF9800"
+                     BackgroundColor="#121212">
+
+            <Grid>
+                <!-- Orders List -->
+                <CollectionView ItemsSource="{Binding Orders}"
+                                SelectionMode="None">
+                    <CollectionView.Header>
+                        <VerticalStackLayout Padding="16,16,16,8" Spacing="4">
+                            <Label Text="Order History" FontSize="22" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Track ongoing campus orders and review receipts." FontSize="13" TextColor="#AAAAAA"/>
+                        </VerticalStackLayout>
+                    </CollectionView.Header>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Order">
+                            <Grid Padding="16,6">
+                                <Border BackgroundColor="#1E1E1E"
+                                        StrokeThickness="1"
+                                        Stroke="#333333"
+                                        Padding="16">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12"/>
+                                    </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OrderHistoryViewModel}}, Path=SelectOrderCommand}"
+                                                              CommandParameter="{Binding .}"/>
+                                    </Border.GestureRecognizers>
+
+                                    <VerticalStackLayout Spacing="10">
+                                        <!-- Top Row: Order ID & Status Badge -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                                <Label Text="{Binding Id, StringFormat='Order #{0}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                                <Label Text="{Binding OrderType, StringFormat='• {0}'}" FontSize="14" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+
+                                            <!-- Status Pill -->
+                                            <Border Grid.Column="1" BackgroundColor="#2C2415" StrokeThickness="1" Stroke="#FF9800" Padding="8,2">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="12"/>
+                                                </Border.StrokeShape>
+                                                <Label Text="{Binding Status}" FontSize="11" FontAttributes="Bold" TextColor="#FF9800"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <BoxView HeightRequest="1" Color="#2A2A2A"/>
+
+                                        <!-- Middle Row: Timestamp & Total -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <Label Grid.Column="0" Text="{Binding OrderDate, StringFormat='{0:g}'}" FontSize="13" TextColor="#888888" VerticalOptions="Center"/>
+                                            <Label Grid.Column="1" Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="18" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
+                                        </Grid>
+
+                                        <Label Text="Tap to view itemized receipt →" FontSize="12" TextColor="#FF9800" HorizontalOptions="End"/>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Empty State View -->
+                <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="12"
+                                     Padding="30">
+                    <Label Text="📋" FontSize="60" HorizontalOptions="Center"/>
+                    <Label Text="No Orders Yet" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                    <Label Text="When you place an order from campus cafes, your receipts and order tracking will appear right here."
+                           FontSize="14"
+                           TextColor="#888888"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </Grid>
+
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

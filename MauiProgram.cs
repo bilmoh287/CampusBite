@@ -36,6 +36,8 @@ public static class MauiProgram
         builder.Services.AddTransient<FoodDetailsViewModel>();
         builder.Services.AddTransient<CartViewModel>();
         builder.Services.AddTransient<CheckoutViewModel>();
+        builder.Services.AddTransient<OrderHistoryViewModel>();
+        builder.Services.AddTransient<OrderDetailsViewModel>();
 
         // Register Views
         builder.Services.AddTransient<MainPage>();
@@ -44,6 +46,8 @@ public static class MauiProgram
         builder.Services.AddTransient<FoodDetailsPage>();
         builder.Services.AddTransient<CartPage>();
         builder.Services.AddTransient<CheckoutPage>();
+        builder.Services.AddTransient<OrderHistoryPage>();
+        builder.Services.AddTransient<OrderDetailsPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
