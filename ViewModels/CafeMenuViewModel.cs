@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CampusBite.Models;
 using CampusBite.Services.Interfaces;
+using CampusBite.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -84,7 +85,11 @@ public partial class CafeMenuViewModel : ObservableObject
     {
         if (product == null) return;
 
-        // Stub ready for FoodDetailsPage in Version 1.3.2!
-        await Shell.Current.DisplayAlertAsync("Item Selected", $"You selected '{product.Name}' (${product.Price:F2}). Details page coming next!", "OK");
+        var navigationParameter = new Dictionary<string, object>
+        {
+            { "Product", product }
+        };
+
+        await Shell.Current.GoToAsync(nameof(FoodDetailsPage), navigationParameter);
     }
 }

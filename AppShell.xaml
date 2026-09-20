@@ -11,6 +11,11 @@
             Title="Cafés"
             ContentTemplate="{DataTemplate views:CafeListPage}"
             Route="CafeListPage" />
+
+        <ShellContent
+            Title="Cart"
+            ContentTemplate="{DataTemplate views:CartPage}"
+            Route="CartPage" />
     </TabBar>
 
 </Shell>

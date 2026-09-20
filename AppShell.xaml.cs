@@ -9,6 +9,7 @@ namespace CampusBite
             InitializeComponent();
 
             Routing.RegisterRoute(nameof(CafeMenuPage), typeof(CafeMenuPage));
+            Routing.RegisterRoute(nameof(FoodDetailsPage), typeof(FoodDetailsPage));
         }
     }
 }

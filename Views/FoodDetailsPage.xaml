@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CampusBite.ViewModels"
+             x:Class="CampusBite.Views.FoodDetailsPage"
+             x:DataType="vm:FoodDetailsViewModel"
+             Title="{Binding Product.Name, FallbackValue='Food Details'}"
+             BackgroundColor="#F8F9FA">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- Scrollable Product Content -->
+        <ScrollView Grid.Row="0" VerticalOptions="Fill">
+            <VerticalStackLayout Padding="20" Spacing="20">
+
+                <!-- Hero Image Card -->
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="#F0EBFF"
+                        HeightRequest="220"
+                        Padding="20"
+                        StrokeThickness="0"
+                        HorizontalOptions="Fill">
+                    <Image Source="{Binding Product.ImageUrl, FallbackValue='dotnet_bot.png'}"
+                           Aspect="AspectFit"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Border>
+
+                <!-- Product Header Info -->
+                <VerticalStackLayout Spacing="8">
+                    
+                    <Grid ColumnDefinitions="*,Auto">
+                        <!-- Category Tag -->
+                        <Border Grid.Column="0"
+                                StrokeShape="RoundRectangle 12"
+                                BackgroundColor="#512BD4"
+                                Padding="10,4"
+                                HorizontalOptions="Start"
+                                StrokeThickness="0">
+                            <Label Text="{Binding Product.Category, FallbackValue='Item'}" 
+                                   FontSize="11" 
+                                   FontAttributes="Bold" 
+                                   TextColor="White" />
+                        </Border>
+
+                        <!-- Availability Badge -->
+                        <Border Grid.Column="1"
+                                StrokeShape="RoundRectangle 12"
+                                Padding="8,3"
+                                StrokeThickness="0">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding Product.IsAvailable}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#E6F4EA" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Border" Binding="{Binding Product.IsAvailable}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#FCE8E6" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Label FontSize="11" FontAttributes="Bold">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Product.IsAvailable}" Value="True">
+                                        <Setter Property="Text" Value="Available" />
+                                        <Setter Property="TextColor" Value="#137333" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" Binding="{Binding Product.IsAvailable}" Value="False">
+                                        <Setter Property="Text" Value="Sold Out" />
+                                        <Setter Property="TextColor" Value="#C5221F" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+                    </Grid>
+
+                    <!-- Title & Unit Price -->
+                    <Label Text="{Binding Product.Name, FallbackValue='Select an Item'}" 
+                           FontSize="24" 
+                           FontAttributes="Bold" 
+                           TextColor="#1F1F1F" />
+
+                    <Label Text="{Binding Product.Price, StringFormat='${0:F2} per item', FallbackValue='$0.00'}" 
+                           FontSize="16" 
+                           FontAttributes="Bold" 
+                           TextColor="#512BD4" />
+                </VerticalStackLayout>
+
+                <!-- Description Card -->
+                <Border StrokeShape="RoundRectangle 12"
+                        Stroke="#E0E0E0"
+                        StrokeThickness="1"
+                        BackgroundColor="White"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Description" FontSize="14" FontAttributes="Bold" TextColor="#333333" />
+                        <Label Text="{Binding Product.Description, FallbackValue='No description available.'}" 
+                               FontSize="13" 
+                               TextColor="#666666" 
+                               LineHeight="1.2" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Quantity Stepper Card -->
+                <Border StrokeShape="RoundRectangle 12"
+                        Stroke="#E0E0E0"
+                        StrokeThickness="1"
+                        BackgroundColor="White"
+                        Padding="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" 
+                               Text="Quantity" 
+                               FontSize="16" 
+                               FontAttributes="Bold" 
+                               TextColor="#1F1F1F" 
+                               VerticalOptions="Center" />
+
+                        <!-- Minus / Quantity / Plus Control -->
+                        <HorizontalStackLayout Grid.Column="1" Spacing="12" VerticalOptions="Center">
+                            
+                            <!-- Minus Button -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    HeightRequest="40"
+                                    WidthRequest="40"
+                                    BackgroundColor="#F0F0F0"
+                                    StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding DecreaseQuantityCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="-" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TextColor="#333333" />
+                            </Border>
+
+                            <!-- Quantity Count -->
+                            <Label Text="{Binding Quantity}" 
+                                   FontSize="18" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#1F1F1F" 
+                                   VerticalOptions="Center" 
+                                   WidthRequest="30" 
+                                   HorizontalTextAlignment="Center" />
+
+                            <!-- Plus Button -->
+                            <Border StrokeShape="RoundRectangle 20"
+                                    HeightRequest="40"
+                                    WidthRequest="40"
+                                    BackgroundColor="#512BD4"
+                                    StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding IncreaseQuantityCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="+" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TextColor="White" />
+                            </Border>
+
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Action Bar -->
+        <Border Grid.Row="1"
+                BackgroundColor="White"
+                Padding="20,15"
+                Stroke="#E0E0E0"
+                StrokeThickness="1">
+            <Button Text="{Binding TotalPrice, StringFormat='Add to Order • ${0:F2}', FallbackValue='Add to Order'}"
+                    Command="{Binding AddToCartCommand}"
+                    BackgroundColor="#512BD4"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="12"
+                    HeightRequest="52"
+                    HorizontalOptions="Fill" />
+        </Border>
+
+    </Grid>
+
+</ContentPage>
