@@ -27,6 +27,7 @@ public static class MauiProgram
         builder.Services.AddScoped<ICafeService, CafeService>();
         builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
+        builder.Services.AddScoped<ICafeAdminService, CafeAdminService>();
         builder.Services.AddSingleton<ICartService, CartService>(); // Singleton state manager!
 
         // Register ViewModels
@@ -38,6 +39,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CheckoutViewModel>();
         builder.Services.AddTransient<OrderHistoryViewModel>();
         builder.Services.AddTransient<OrderDetailsViewModel>();
+        builder.Services.AddTransient<CafeAdminViewModel>();
 
         // Register Views
         builder.Services.AddTransient<MainPage>();
@@ -48,6 +50,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CheckoutPage>();
         builder.Services.AddTransient<OrderHistoryPage>();
         builder.Services.AddTransient<OrderDetailsPage>();
+        builder.Services.AddTransient<CafeAdminPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

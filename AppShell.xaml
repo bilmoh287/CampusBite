@@ -21,6 +21,11 @@
             Title="Orders"
             ContentTemplate="{DataTemplate views:OrderHistoryPage}"
             Route="OrderHistoryPage" />
+
+        <ShellContent
+            Title="Admin"
+            ContentTemplate="{DataTemplate views:CafeAdminPage}"
+            Route="CafeAdminPage" />
     </TabBar>
 
 </Shell>

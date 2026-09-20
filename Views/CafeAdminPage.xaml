@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CampusBite.ViewModels"
+             xmlns:models="clr-namespace:CampusBite.Models"
+             x:Class="CampusBite.Views.CafeAdminPage"
+             x:DataType="vm:CafeAdminViewModel"
+             Title="Staff Dashboard ⚙️"
+             BackgroundColor="#121212">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- Top Header & Cafe Selector Bar -->
+        <Border Grid.Row="0" BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="16">
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="*, Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Cafe Admin Dashboard" FontSize="20" FontAttributes="Bold" TextColor="White"/>
+                        <Label Text="Manage live orders and advance kitchen status." FontSize="12" TextColor="#AAAAAA"/>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Cafe Picker Container -->
+                <Border BackgroundColor="#2C2C2C" StrokeThickness="1" Stroke="#444444" Padding="12,4">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Picker ItemsSource="{Binding Cafes}"
+                            SelectedItem="{Binding SelectedCafe}"
+                            ItemDisplayBinding="{Binding Name}"
+                            Title="Select Active Cafe"
+                            TextColor="White"
+                            TitleColor="#AAAAAA"
+                            FontSize="14"/>
+                </Border>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Orders View & Refresh -->
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadAdminDataCommand}"
+                     RefreshColor="#FF9800"
+                     BackgroundColor="#121212">
+
+            <Grid>
+                <!-- Orders Collection -->
+                <CollectionView ItemsSource="{Binding IncomingOrders}" SelectionMode="None">
+                    <CollectionView.Header>
+                        <VerticalStackLayout Padding="16,12" Spacing="8">
+                            <Label Text="Incoming Campus Tickets" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                        </VerticalStackLayout>
+                    </CollectionView.Header>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Order">
+                            <Grid Padding="16,6">
+                                <Border BackgroundColor="#1E1E1E"
+                                        StrokeThickness="1"
+                                        Stroke="#333333"
+                                        Padding="16">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12"/>
+                                    </Border.StrokeShape>
+
+                                    <VerticalStackLayout Spacing="12">
+                                        <!-- Header Row -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Label Text="{Binding Id, StringFormat='Ticket #{0}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                                    <Label Text="{Binding OrderType, StringFormat='• {0}'}" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                                                </HorizontalStackLayout>
+                                                <Label Text="{Binding OrderDate, StringFormat='{0:g}'}" FontSize="12" TextColor="#777777"/>
+                                            </VerticalStackLayout>
+
+                                            <!-- Status Pill -->
+                                            <Border Grid.Column="1" BackgroundColor="#2C2415" StrokeThickness="1" Stroke="#FF9800" Padding="10,4">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="12"/>
+                                                </Border.StrokeShape>
+                                                <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" TextColor="#FF9800"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <BoxView HeightRequest="1" Color="#2A2A2A"/>
+
+                                        <!-- Items List Preview -->
+                                        <CollectionView ItemsSource="{Binding OrderItems}" SelectionMode="None">
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:OrderItem">
+                                                    <Grid ColumnDefinitions="*, Auto" Padding="0,3">
+                                                        <Label Grid.Column="0" Text="{Binding Product.Name, FallbackValue='Meal Item'}" FontSize="13" TextColor="#CCCCCC"/>
+                                                        <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+
+                                        <BoxView HeightRequest="1" Color="#2A2A2A"/>
+
+                                        <!-- Bottom Action Row -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                                                <Label Text="Total Amount" FontSize="11" TextColor="#888888"/>
+                                                <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                            </VerticalStackLayout>
+
+                                            <Button Grid.Column="1"
+                                                    Text="Advance Ticket Status ⚡"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=AdvanceStatusCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="#FF9800"
+                                                    TextColor="Black"
+                                                    FontAttributes="Bold"
+                                                    CornerRadius="16"
+                                                    Padding="16,8"
+                                                    FontSize="12"/>
+                                        </Grid>
+
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Empty State -->
+                <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                                     HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="12"
+                                     Padding="30">
+                    <Label Text="👨‍🍳" FontSize="60" HorizontalOptions="Center"/>
+                    <Label Text="No Active Orders" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                    <Label Text="When students place food orders for this cafe, tickets will appear here for staff preparation."
+                           FontSize="14"
+                           TextColor="#888888"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </Grid>
+        </RefreshView>
+
+    </Grid>
+
+</ContentPage>
