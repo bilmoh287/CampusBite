@@ -3,6 +3,7 @@ using CampusBite.Services.Implementations;
 using CampusBite.Services.Interfaces;
 using CampusBite.ViewModels;
 using CampusBite.Views;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace CampusBite;
@@ -20,14 +21,14 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Register Database Context
-        builder.Services.AddDbContext<AppDbContext>();
+        // Register Database Context with Transient lifetime for thread safety in MAUI
+        builder.Services.AddDbContext<AppDbContext>(ServiceLifetime.Transient, ServiceLifetime.Transient);
 
-        // Register Services
-        builder.Services.AddScoped<ICafeService, CafeService>();
-        builder.Services.AddScoped<IProductService, ProductService>();
-        builder.Services.AddScoped<IOrderService, OrderService>();
-        builder.Services.AddScoped<ICafeAdminService, CafeAdminService>();
+        // Register Services (Transient to ensure fresh DbContext instances per operation)
+        builder.Services.AddTransient<ICafeService, CafeService>();
+        builder.Services.AddTransient<IProductService, ProductService>();
+        builder.Services.AddTransient<IOrderService, OrderService>();
+        builder.Services.AddTransient<ICafeAdminService, CafeAdminService>();
         builder.Services.AddSingleton<ICartService, CartService>(); // Singleton state manager!
 
         // Register ViewModels

@@ -85,17 +85,17 @@
 
                                         <BoxView HeightRequest="1" Color="#2A2A2A"/>
 
-                                        <!-- Items List Preview -->
-                                        <CollectionView ItemsSource="{Binding OrderItems}" SelectionMode="None">
-                                            <CollectionView.ItemTemplate>
+                                        <!-- Items List Preview using BindableLayout (WinUI Safe) -->
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding OrderItems}" Spacing="3">
+                                            <BindableLayout.ItemTemplate>
                                                 <DataTemplate x:DataType="models:OrderItem">
                                                     <Grid ColumnDefinitions="*, Auto" Padding="0,3">
                                                         <Label Grid.Column="0" Text="{Binding Product.Name, FallbackValue='Meal Item'}" FontSize="13" TextColor="#CCCCCC"/>
                                                         <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800"/>
                                                     </Grid>
                                                 </DataTemplate>
-                                            </CollectionView.ItemTemplate>
-                                        </CollectionView>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
 
                                         <BoxView HeightRequest="1" Color="#2A2A2A"/>
 
