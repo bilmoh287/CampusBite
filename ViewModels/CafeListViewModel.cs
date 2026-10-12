@@ -24,13 +24,16 @@ public partial class CafeListViewModel : ObservableObject
         _cafeService = cafeService;
     }
 
+    private bool _isProcessing;
+
     [RelayCommand]
     public async Task LoadCafesAsync()
     {
-        if (IsBusy) return;
+        if (_isProcessing) return;
 
         try
         {
+            _isProcessing = true;
             IsBusy = true;
             var cafeList = await _cafeService.GetCafesAsync();
 
@@ -42,6 +45,7 @@ public partial class CafeListViewModel : ObservableObject
         }
         finally
         {
+            _isProcessing = false;
             IsBusy = false;
         }
     }

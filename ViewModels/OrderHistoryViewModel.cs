@@ -20,13 +20,18 @@ public partial class OrderHistoryViewModel : ObservableObject
         _orderService = orderService;
     }
 
+    private bool _isProcessing;
+
     [RelayCommand]
     public async Task LoadOrdersAsync()
     {
-        IsRefreshing = true;
+        if (_isProcessing) return;
 
         try
         {
+            _isProcessing = true;
+            IsRefreshing = true;
+
             var list = await _orderService.GetOrdersAsync();
             Orders = new ObservableCollection<Order>(list);
             IsEmpty = Orders.Count == 0;
@@ -38,6 +43,7 @@ public partial class OrderHistoryViewModel : ObservableObject
         }
         finally
         {
+            _isProcessing = false;
             IsRefreshing = false;
         }
     }

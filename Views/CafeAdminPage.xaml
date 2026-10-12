@@ -18,6 +18,16 @@
                         <Label Text="Cafe Admin Dashboard" FontSize="20" FontAttributes="Bold" TextColor="White"/>
                         <Label Text="Manage live orders and advance kitchen status." FontSize="12" TextColor="#AAAAAA"/>
                     </VerticalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="🔄 Refresh"
+                            Command="{Binding LoadAdminDataCommand}"
+                            BackgroundColor="#2C2C2C"
+                            TextColor="#FF9800"
+                            FontAttributes="Bold"
+                            FontSize="12"
+                            CornerRadius="8"
+                            Padding="12,6"
+                            VerticalOptions="Center"/>
                 </Grid>
 
                 <!-- Cafe Picker Container -->
@@ -43,14 +53,27 @@
                      RefreshColor="#FF9800"
                      BackgroundColor="#121212">
 
-            <Grid>
-                <!-- Orders Collection -->
-                <CollectionView ItemsSource="{Binding IncomingOrders}" SelectionMode="None">
-                    <CollectionView.Header>
-                        <VerticalStackLayout Padding="16,12" Spacing="8">
-                            <Label Text="Incoming Campus Tickets" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
-                        </VerticalStackLayout>
-                    </CollectionView.Header>
+            <!-- Orders Collection (Direct child of RefreshView, WinUI safe) -->
+            <CollectionView ItemsSource="{Binding IncomingOrders}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Spacing="12"
+                                         Padding="30">
+                        <Label Text="👨‍🍳" FontSize="60" HorizontalOptions="Center"/>
+                        <Label Text="No Active Orders" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                        <Label Text="When students place food orders for this cafe, tickets will appear here for staff preparation."
+                               FontSize="14"
+                               TextColor="#888888"
+                               HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.Header>
+                    <VerticalStackLayout Padding="16,12" Spacing="8">
+                        <Label Text="Incoming Campus Tickets" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                    </VerticalStackLayout>
+                </CollectionView.Header>
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Order">
@@ -124,21 +147,6 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-
-                <!-- Empty State -->
-                <VerticalStackLayout IsVisible="{Binding IsEmpty}"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Center"
-                                     Spacing="12"
-                                     Padding="30">
-                    <Label Text="👨‍🍳" FontSize="60" HorizontalOptions="Center"/>
-                    <Label Text="No Active Orders" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
-                    <Label Text="When students place food orders for this cafe, tickets will appear here for staff preparation."
-                           FontSize="14"
-                           TextColor="#888888"
-                           HorizontalTextAlignment="Center"/>
-                </VerticalStackLayout>
-            </Grid>
         </RefreshView>
 
     </Grid>

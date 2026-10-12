@@ -15,10 +15,22 @@
                      RefreshColor="#FF9800"
                      BackgroundColor="#121212">
 
-            <Grid>
-                <!-- Orders List -->
-                <CollectionView ItemsSource="{Binding Orders}"
-                                SelectionMode="None">
+            <!-- Orders List (Direct child of RefreshView, WinUI safe) -->
+            <CollectionView ItemsSource="{Binding Orders}"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Spacing="12"
+                                         Padding="30">
+                        <Label Text="📋" FontSize="60" HorizontalOptions="Center"/>
+                        <Label Text="No Orders Yet" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                        <Label Text="When you place an order from campus cafes, your receipts and order tracking will appear right here."
+                               FontSize="14"
+                               TextColor="#888888"
+                               HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
                     <CollectionView.Header>
                         <VerticalStackLayout Padding="16,16,16,8" Spacing="4">
                             <Label Text="Order History" FontSize="22" FontAttributes="Bold" TextColor="White"/>
@@ -72,23 +84,7 @@
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
-                </CollectionView>
-
-                <!-- Empty State View -->
-                <VerticalStackLayout IsVisible="{Binding IsEmpty}"
-                                     HorizontalOptions="Center"
-                                     VerticalOptions="Center"
-                                     Spacing="12"
-                                     Padding="30">
-                    <Label Text="📋" FontSize="60" HorizontalOptions="Center"/>
-                    <Label Text="No Orders Yet" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
-                    <Label Text="When you place an order from campus cafes, your receipts and order tracking will appear right here."
-                           FontSize="14"
-                           TextColor="#888888"
-                           HorizontalTextAlignment="Center"/>
-                </VerticalStackLayout>
-            </Grid>
-
+            </CollectionView>
         </RefreshView>
     </Grid>
 

@@ -22,6 +22,9 @@ public partial class CafeAdminViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEmpty = true;
 
+    private bool _isBusy;
+    private bool _isInitializing;
+
     public CafeAdminViewModel(ICafeAdminService adminService)
     {
         _adminService = adminService;
@@ -29,7 +32,7 @@ public partial class CafeAdminViewModel : ObservableObject
 
     partial void OnSelectedCafeChanged(Cafe? value)
     {
-        if (value != null)
+        if (value != null && !_isInitializing && !_isBusy)
         {
             _ = LoadOrdersAsync();
         }
@@ -38,10 +41,14 @@ public partial class CafeAdminViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadAdminDataAsync()
     {
-        IsRefreshing = true;
+        if (_isBusy) return;
 
         try
         {
+            _isBusy = true;
+            _isInitializing = true;
+            IsRefreshing = true;
+
             var cafeList = await _adminService.GetCafesAsync();
             Cafes = new ObservableCollection<Cafe>(cafeList);
 
@@ -49,9 +56,12 @@ public partial class CafeAdminViewModel : ObservableObject
             {
                 SelectedCafe = Cafes.First();
             }
-            else if (SelectedCafe != null)
+
+            _isInitializing = false;
+
+            if (SelectedCafe != null)
             {
-                await LoadOrdersAsync();
+                await LoadOrdersInternalAsync();
             }
         }
         catch (Exception ex)
@@ -60,21 +70,22 @@ public partial class CafeAdminViewModel : ObservableObject
         }
         finally
         {
+            _isInitializing = false;
+            _isBusy = false;
             IsRefreshing = false;
         }
     }
 
     [RelayCommand]
-    private async Task LoadOrdersAsync()
+    public async Task LoadOrdersAsync()
     {
-        if (SelectedCafe == null) return;
+        if (_isBusy || SelectedCafe == null) return;
 
-        IsRefreshing = true;
         try
         {
-            var orders = await _adminService.GetCafeOrdersAsync(SelectedCafe.Id, SelectedStatusFilter);
-            IncomingOrders = new ObservableCollection<Order>(orders);
-            IsEmpty = IncomingOrders.Count == 0;
+            _isBusy = true;
+            IsRefreshing = true;
+            await LoadOrdersInternalAsync();
         }
         catch (Exception ex)
         {
@@ -82,8 +93,18 @@ public partial class CafeAdminViewModel : ObservableObject
         }
         finally
         {
+            _isBusy = false;
             IsRefreshing = false;
         }
+    }
+
+    private async Task LoadOrdersInternalAsync()
+    {
+        if (SelectedCafe == null) return;
+
+        var orders = await _adminService.GetCafeOrdersAsync(SelectedCafe.Id, SelectedStatusFilter);
+        IncomingOrders = new ObservableCollection<Order>(orders);
+        IsEmpty = IncomingOrders.Count == 0;
     }
 
     [RelayCommand]

@@ -10,9 +10,9 @@ public partial class CafeAdminPage : ContentPage
         BindingContext = _viewModel = viewModel;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _viewModel.LoadAdminDataCommand.Execute(null);
+        await _viewModel.LoadAdminDataCommand.ExecuteAsync(null);
     }
 }

@@ -10,9 +10,9 @@ public partial class OrderHistoryPage : ContentPage
         BindingContext = _viewModel = viewModel;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _viewModel.LoadOrdersCommand.Execute(null);
+        await _viewModel.LoadOrdersCommand.ExecuteAsync(null);
     }
 }
