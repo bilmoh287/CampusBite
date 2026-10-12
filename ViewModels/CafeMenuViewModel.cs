@@ -13,7 +13,10 @@ public partial class CafeMenuViewModel : ObservableObject
     private readonly IProductService _productService;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCafeClosed))]
     private Cafe? _cafe;
+
+    public bool IsCafeClosed => Cafe != null && !Cafe.IsOpen;
 
     public ObservableCollection<Product> Products { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();

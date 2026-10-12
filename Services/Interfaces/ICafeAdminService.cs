@@ -6,4 +6,5 @@ public interface ICafeAdminService
     Task<List<Order>> GetCafeOrdersAsync(int cafeId, string? statusFilter = null);
     Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus);
     Task<bool> ToggleProductAvailabilityAsync(int productId, bool isAvailable);
+    Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen);
 }

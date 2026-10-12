@@ -22,6 +22,9 @@ public partial class CafeAdminViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEmpty = true;
 
+    [ObservableProperty]
+    private bool _isCafeOpen = true;
+
     private bool _isBusy;
     private bool _isInitializing;
 
@@ -32,9 +35,34 @@ public partial class CafeAdminViewModel : ObservableObject
 
     partial void OnSelectedCafeChanged(Cafe? value)
     {
-        if (value != null && !_isInitializing && !_isBusy)
+        if (value != null)
         {
-            _ = LoadOrdersAsync();
+            _isCafeOpen = value.IsOpen;
+            OnPropertyChanged(nameof(IsCafeOpen));
+
+            if (!_isInitializing && !_isBusy)
+            {
+                _ = LoadOrdersAsync();
+            }
+        }
+    }
+
+    async partial void OnIsCafeOpenChanged(bool value)
+    {
+        if (SelectedCafe == null || SelectedCafe.IsOpen == value || _isInitializing || _isBusy) return;
+
+        bool updated = await _adminService.ToggleCafeStatusAsync(SelectedCafe.Id, value);
+        if (updated)
+        {
+            SelectedCafe.IsOpen = value;
+            string status = value ? "OPEN" : "CLOSED";
+            await Shell.Current.DisplayAlertAsync("Café Status Updated 🏪", $"{SelectedCafe.Name} is now marked {status} for student orders.", "OK");
+        }
+        else
+        {
+            // Revert if database update failed
+            _isCafeOpen = SelectedCafe.IsOpen;
+            OnPropertyChanged(nameof(IsCafeOpen));
         }
     }
 

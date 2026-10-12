@@ -161,15 +161,33 @@
                 Padding="20,15"
                 Stroke="#E0E0E0"
                 StrokeThickness="1">
-            <Button Text="{Binding TotalPrice, StringFormat='Add to Order • ${0:F2}', FallbackValue='Add to Order'}"
-                    Command="{Binding AddToCartCommand}"
-                    BackgroundColor="#512BD4"
-                    TextColor="White"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    CornerRadius="12"
-                    HeightRequest="52"
-                    HorizontalOptions="Fill" />
+            <VerticalStackLayout Spacing="8">
+                <!-- Closed Warning Notice -->
+                <Label IsVisible="{Binding IsCafeClosed}"
+                       Text="⚠️ This café is currently closed and not accepting orders."
+                       TextColor="#C5221F"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+
+                <Button Text="{Binding TotalPrice, StringFormat='Add to Order • ${0:F2}', FallbackValue='Add to Order'}"
+                        Command="{Binding AddToCartCommand}"
+                        IsEnabled="{Binding CanOrder}"
+                        BackgroundColor="#512BD4"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        CornerRadius="12"
+                        HeightRequest="52"
+                        HorizontalOptions="Fill">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding CanOrder}" Value="False">
+                            <Setter Property="BackgroundColor" Value="#BDBDBD"/>
+                            <Setter Property="Text" Value="Unavailable • Café Closed"/>
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </VerticalStackLayout>
         </Border>
 
     </Grid>

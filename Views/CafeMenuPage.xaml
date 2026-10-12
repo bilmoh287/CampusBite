@@ -56,6 +56,20 @@
                 <Label Text="📍" FontSize="11" />
                 <Label Text="{Binding Cafe.Location}" FontSize="11" TextColor="#D1C4E9" FontAttributes="Italic" />
             </HorizontalStackLayout>
+
+            <!-- Closed Warning Banner -->
+            <Border IsVisible="{Binding IsCafeClosed}"
+                    BackgroundColor="#3D1A1A"
+                    Stroke="#F44336"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="10,6"
+                    Margin="0,8,0,0">
+                <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                    <Label Text="⚠️" FontSize="12" VerticalOptions="Center"/>
+                    <Label Text="This café is currently closed. Browsing menu only." FontSize="12" FontAttributes="Bold" TextColor="#FFCDD2" VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </Border>
         </VerticalStackLayout>
 
         <!-- Horizontal Category Filter Chips -->

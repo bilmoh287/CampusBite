@@ -56,4 +56,14 @@ public class CafeAdminService : ICafeAdminService
         await _dbContext.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
+    {
+        var cafe = await _dbContext.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
+        if (cafe == null) return false;
+
+        cafe.IsOpen = isOpen;
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }

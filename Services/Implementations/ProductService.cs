@@ -17,6 +17,7 @@ public class ProductService : IProductService
     public async Task<List<Product>> GetProductsByCafeIdAsync(int cafeId, string? category = null)
     {
         var query = _context.Products
+            .Include(p => p.Cafe)
             .Where(p => p.CafeId == cafeId)
             .AsNoTracking();
 

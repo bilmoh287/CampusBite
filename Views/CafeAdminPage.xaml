@@ -43,6 +43,49 @@
                             TitleColor="#AAAAAA"
                             FontSize="14"/>
                 </Border>
+
+                <!-- Cafe Status Toggle Card -->
+                <Border BackgroundColor="#222222" StrokeThickness="1" Stroke="#333333" Padding="14,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                            <Label Text="Café Status:" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                            <Border StrokeShape="RoundRectangle 10" Padding="8,2" StrokeThickness="0">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsCafeOpen}" Value="True">
+                                        <Setter Property="BackgroundColor" Value="#1A3826"/>
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsCafeOpen}" Value="False">
+                                        <Setter Property="BackgroundColor" Value="#3D1A1A"/>
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Label FontSize="11" FontAttributes="Bold">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsCafeOpen}" Value="True">
+                                            <Setter Property="Text" Value="OPEN"/>
+                                            <Setter Property="TextColor" Value="#4CAF50"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsCafeOpen}" Value="False">
+                                            <Setter Property="Text" Value="CLOSED"/>
+                                            <Setter Property="TextColor" Value="#F44336"/>
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </Border>
+                        </HorizontalStackLayout>
+
+                        <!-- Toggle Switch -->
+                        <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                            <Label Text="Accepting Orders" FontSize="12" TextColor="#888888" VerticalOptions="Center"/>
+                            <Switch IsToggled="{Binding IsCafeOpen}"
+                                    OnColor="#4CAF50"
+                                    ThumbColor="White"
+                                    VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
             </VerticalStackLayout>
         </Border>
 
