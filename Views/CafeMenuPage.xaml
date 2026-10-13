@@ -130,6 +130,13 @@
                                     BackgroundColor="White"
                                     Padding="15">
 
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="False">
+                                        <Setter Property="Opacity" Value="0.6" />
+                                        <Setter Property="BackgroundColor" Value="#FAFAFA" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeMenuViewModel}}, Path=SelectProductCommand}"
                                                           CommandParameter="{Binding .}" />

@@ -162,9 +162,16 @@
                 Stroke="#E0E0E0"
                 StrokeThickness="1">
             <VerticalStackLayout Spacing="8">
-                <!-- Closed Warning Notice -->
+                <!-- Status Warning Notices -->
                 <Label IsVisible="{Binding IsCafeClosed}"
                        Text="⚠️ This café is currently closed and not accepting orders."
+                       TextColor="#C5221F"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+
+                <Label IsVisible="{Binding IsSoldOut}"
+                       Text="🚫 This item is sold out and temporarily unavailable."
                        TextColor="#C5221F"
                        FontSize="12"
                        FontAttributes="Bold"
@@ -181,9 +188,13 @@
                         HeightRequest="52"
                         HorizontalOptions="Fill">
                     <Button.Triggers>
-                        <DataTrigger TargetType="Button" Binding="{Binding CanOrder}" Value="False">
+                        <DataTrigger TargetType="Button" Binding="{Binding IsCafeClosed}" Value="True">
                             <Setter Property="BackgroundColor" Value="#BDBDBD"/>
                             <Setter Property="Text" Value="Unavailable • Café Closed"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsSoldOut}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#BDBDBD"/>
+                            <Setter Property="Text" Value="Sold Out • Out of Stock"/>
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>

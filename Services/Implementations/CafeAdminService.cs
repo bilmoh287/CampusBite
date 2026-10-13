@@ -47,6 +47,16 @@ public class CafeAdminService : ICafeAdminService
         return true;
     }
 
+    public async Task<List<Product>> GetCafeProductsAsync(int cafeId)
+    {
+        return await _dbContext.Products
+            .Where(p => p.CafeId == cafeId)
+            .OrderBy(p => p.Category)
+            .ThenBy(p => p.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<bool> ToggleProductAvailabilityAsync(int productId, bool isAvailable)
     {
         var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);

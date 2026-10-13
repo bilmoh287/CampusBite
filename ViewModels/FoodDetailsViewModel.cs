@@ -14,6 +14,7 @@ public partial class FoodDetailsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(TotalPrice))]
     [NotifyPropertyChangedFor(nameof(CanOrder))]
     [NotifyPropertyChangedFor(nameof(IsCafeClosed))]
+    [NotifyPropertyChangedFor(nameof(IsSoldOut))]
     private Product? _product;
 
     [ObservableProperty]
@@ -23,6 +24,7 @@ public partial class FoodDetailsViewModel : ObservableObject
     public decimal TotalPrice => (Product?.Price ?? 0m) * Quantity;
     public bool CanOrder => (Product?.IsAvailable ?? true) && (Product?.Cafe?.IsOpen ?? true);
     public bool IsCafeClosed => Product?.Cafe != null && !Product.Cafe.IsOpen;
+    public bool IsSoldOut => Product != null && !Product.IsAvailable;
 
     public FoodDetailsViewModel(ICartService cartService)
     {

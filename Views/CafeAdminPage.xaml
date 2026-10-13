@@ -86,17 +86,58 @@
                         </HorizontalStackLayout>
                     </Grid>
                 </Border>
+
+                <!-- Section Switcher Tabs (Native Buttons for robust WinUI 3 pointer handling) -->
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                    <!-- Live Orders Tab Button -->
+                    <Button Grid.Column="0"
+                            Text="🎫 Live Tickets"
+                            Command="{Binding SwitchSectionCommand}"
+                            CommandParameter="Orders"
+                            CornerRadius="8"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HeightRequest="42">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="True">
+                                <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                <Setter Property="TextColor" Value="Black"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="False">
+                                <Setter Property="BackgroundColor" Value="#222222"/>
+                                <Setter Property="TextColor" Value="White"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <!-- Menu & Stock Tab Button -->
+                    <Button Grid.Column="1"
+                            Text="🍔 Menu &amp; Stock"
+                            Command="{Binding SwitchSectionCommand}"
+                            CommandParameter="Stock"
+                            CornerRadius="8"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HeightRequest="42">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="True">
+                                <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                <Setter Property="TextColor" Value="Black"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="False">
+                                <Setter Property="BackgroundColor" Value="#222222"/>
+                                <Setter Property="TextColor" Value="White"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </Grid>
             </VerticalStackLayout>
         </Border>
 
-        <!-- Orders View & Refresh -->
-        <RefreshView Grid.Row="1"
-                     IsRefreshing="{Binding IsRefreshing}"
-                     Command="{Binding LoadAdminDataCommand}"
-                     RefreshColor="#FF9800"
-                     BackgroundColor="#121212">
+        <!-- SECTION 1: Orders View (Tab 1) -->
+        <Grid Grid.Row="1" IsVisible="{Binding IsOrdersSectionActive}">
 
-            <!-- Orders Collection (Direct child of RefreshView, WinUI safe) -->
+            <!-- Orders Collection -->
             <CollectionView ItemsSource="{Binding IncomingOrders}" SelectionMode="None">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout HorizontalOptions="Center"
@@ -118,79 +159,203 @@
                     </VerticalStackLayout>
                 </CollectionView.Header>
 
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:Order">
-                            <Grid Padding="16,6">
-                                <Border BackgroundColor="#1E1E1E"
-                                        StrokeThickness="1"
-                                        Stroke="#333333"
-                                        Padding="16">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="12"/>
-                                    </Border.StrokeShape>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Order">
+                        <Grid Padding="16,6">
+                            <Border BackgroundColor="#1E1E1E"
+                                    StrokeThickness="1"
+                                    Stroke="#333333"
+                                    Padding="16">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
 
-                                    <VerticalStackLayout Spacing="12">
-                                        <!-- Header Row -->
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                                <HorizontalStackLayout Spacing="8">
-                                                    <Label Text="{Binding Id, StringFormat='Ticket #{0}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
-                                                    <Label Text="{Binding OrderType, StringFormat='• {0}'}" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
-                                                </HorizontalStackLayout>
-                                                <Label Text="{Binding OrderDate, StringFormat='{0:g}'}" FontSize="12" TextColor="#777777"/>
-                                            </VerticalStackLayout>
-
-                                            <!-- Status Pill -->
-                                            <Border Grid.Column="1" BackgroundColor="#2C2415" StrokeThickness="1" Stroke="#FF9800" Padding="10,4">
-                                                <Border.StrokeShape>
-                                                    <RoundRectangle CornerRadius="12"/>
-                                                </Border.StrokeShape>
-                                                <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" TextColor="#FF9800"/>
-                                            </Border>
-                                        </Grid>
-
-                                        <BoxView HeightRequest="1" Color="#2A2A2A"/>
-
-                                        <!-- Items List Preview using BindableLayout (WinUI Safe) -->
-                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding OrderItems}" Spacing="3">
-                                            <BindableLayout.ItemTemplate>
-                                                <DataTemplate x:DataType="models:OrderItem">
-                                                    <Grid ColumnDefinitions="*, Auto" Padding="0,3">
-                                                        <Label Grid.Column="0" Text="{Binding Product.Name, FallbackValue='Meal Item'}" FontSize="13" TextColor="#CCCCCC"/>
-                                                        <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800"/>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </BindableLayout.ItemTemplate>
+                                <VerticalStackLayout Spacing="12">
+                                    <!-- Header Row -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="{Binding Id, StringFormat='Ticket #{0}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                                <Label Text="{Binding OrderType, StringFormat='• {0}'}" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding OrderDate, StringFormat='{0:g}'}" FontSize="12" TextColor="#777777"/>
                                         </VerticalStackLayout>
 
-                                        <BoxView HeightRequest="1" Color="#2A2A2A"/>
+                                        <!-- Status Pill -->
+                                        <Border Grid.Column="1" BackgroundColor="#2C2415" StrokeThickness="1" Stroke="#FF9800" Padding="10,4">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="12"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" TextColor="#FF9800"/>
+                                        </Border>
+                                    </Grid>
 
-                                        <!-- Bottom Action Row -->
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
-                                                <Label Text="Total Amount" FontSize="11" TextColor="#888888"/>
-                                                <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
-                                            </VerticalStackLayout>
+                                    <BoxView HeightRequest="1" Color="#2A2A2A"/>
 
-                                            <Button Grid.Column="1"
-                                                    Text="Advance Ticket Status ⚡"
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=AdvanceStatusCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    BackgroundColor="#FF9800"
-                                                    TextColor="Black"
-                                                    FontAttributes="Bold"
-                                                    CornerRadius="16"
-                                                    Padding="16,8"
-                                                    FontSize="12"/>
-                                        </Grid>
-
+                                    <!-- Items List Preview using BindableLayout (WinUI Safe) -->
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding OrderItems}" Spacing="3">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="models:OrderItem">
+                                                <Grid ColumnDefinitions="*, Auto" Padding="0,3">
+                                                    <Label Grid.Column="0" Text="{Binding Product.Name, FallbackValue='Meal Item'}" FontSize="13" TextColor="#CCCCCC"/>
+                                                    <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>
-                                </Border>
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-        </RefreshView>
+
+                                    <BoxView HeightRequest="1" Color="#2A2A2A"/>
+
+                                    <!-- Bottom Action Row -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                                            <Label Text="Total Amount" FontSize="11" TextColor="#888888"/>
+                                            <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                        </VerticalStackLayout>
+
+                                        <Button Grid.Column="1"
+                                                Text="Advance Ticket Status ⚡"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=AdvanceStatusCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#FF9800"
+                                                TextColor="Black"
+                                                FontAttributes="Bold"
+                                                CornerRadius="16"
+                                                Padding="16,8"
+                                                FontSize="12">
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Completed">
+                                                    <Setter Property="Text" Value="Completed ✔️"/>
+                                                    <Setter Property="BackgroundColor" Value="#2E7D32"/>
+                                                    <Setter Property="TextColor" Value="White"/>
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                    </Grid>
+
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- SECTION 2: Menu & Stock Control View (Tab 2) -->
+        <Grid Grid.Row="1" IsVisible="{Binding IsStockSectionActive}">
+
+            <!-- Products Collection (Direct child of RefreshView, WinUI safe) -->
+            <CollectionView ItemsSource="{Binding CafeProducts}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Spacing="12"
+                                         Padding="30">
+                        <Label Text="📦" FontSize="60" HorizontalOptions="Center"/>
+                        <Label Text="No Menu Items Found" FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                        <Label Text="No products found for this cafe in the campus database."
+                               FontSize="14"
+                               TextColor="#888888"
+                               HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.Header>
+                    <VerticalStackLayout Padding="16,12" Spacing="4">
+                        <Label Text="Live Stock &amp; Availability" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                        <Label Text="Tap the availability button to mark items sold out or back in stock in real time." FontSize="12" TextColor="#888888"/>
+                    </VerticalStackLayout>
+                </CollectionView.Header>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Product">
+                        <Grid Padding="16,6">
+                            <Border BackgroundColor="#1E1E1E"
+                                    StrokeThickness="1"
+                                    Stroke="#333333"
+                                    Padding="14">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                                    <!-- Product Thumbnail -->
+                                    <Border Grid.Column="0"
+                                            StrokeShape="RoundRectangle 8"
+                                            HeightRequest="48"
+                                            WidthRequest="48"
+                                            BackgroundColor="#2A2A2A"
+                                            Padding="6"
+                                            StrokeThickness="0"
+                                            VerticalOptions="Center">
+                                        <Image Source="{Binding ImageUrl}" Aspect="AspectFit"/>
+                                    </Border>
+
+                                    <!-- Product Details -->
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="White"/>
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="{Binding Category}" FontSize="11" TextColor="#FF9800" FontAttributes="Bold"/>
+                                            <Label Text="•" FontSize="11" TextColor="#666666"/>
+                                            <Label Text="{Binding Price, StringFormat='${0:F2}'}" FontSize="12" TextColor="#CCCCCC"/>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+
+                                    <!-- Interactive Stock Toggle Pill -->
+                                    <Border Grid.Column="2"
+                                            StrokeThickness="1"
+                                            Padding="10,6"
+                                            VerticalOptions="Center">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="14"/>
+                                        </Border.StrokeShape>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=ToggleProductAvailabilityCommand}"
+                                                                  CommandParameter="{Binding .}"/>
+                                        </Border.GestureRecognizers>
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="True">
+                                                <Setter Property="BackgroundColor" Value="#1A3826"/>
+                                                <Setter Property="Stroke" Value="#4CAF50"/>
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="False">
+                                                <Setter Property="BackgroundColor" Value="#3D1A1A"/>
+                                                <Setter Property="Stroke" Value="#F44336"/>
+                                            </DataTrigger>
+                                        </Border.Triggers>
+
+                                        <HorizontalStackLayout Spacing="4">
+                                            <Label FontSize="12">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="True">
+                                                        <Setter Property="Text" Value="✅"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="False">
+                                                        <Setter Property="Text" Value="❌"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                            <Label FontSize="11" FontAttributes="Bold" VerticalOptions="Center">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="True">
+                                                        <Setter Property="Text" Value="IN STOCK"/>
+                                                        <Setter Property="TextColor" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="False">
+                                                        <Setter Property="Text" Value="SOLD OUT"/>
+                                                        <Setter Property="TextColor" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
 
     </Grid>
 
