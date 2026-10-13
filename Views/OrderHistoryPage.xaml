@@ -32,9 +32,88 @@
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
                     <CollectionView.Header>
-                        <VerticalStackLayout Padding="16,16,16,8" Spacing="4">
-                            <Label Text="Order History" FontSize="22" FontAttributes="Bold" TextColor="White"/>
-                            <Label Text="Track ongoing campus orders and review receipts." FontSize="13" TextColor="#AAAAAA"/>
+                        <VerticalStackLayout Padding="16,16,16,8" Spacing="16">
+                            <!-- Page Title -->
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Orders &amp; Spending 📊" FontSize="22" FontAttributes="Bold" TextColor="White"/>
+                                <Label Text="Track ongoing orders and monitor your monthly dining allowance." FontSize="13" TextColor="#AAAAAA"/>
+                            </VerticalStackLayout>
+
+                            <!-- Monthly Budget & Spending Card -->
+                            <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="16">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="14"/>
+                                </Border.StrokeShape>
+                                <VerticalStackLayout Spacing="12">
+                                    <!-- Card Header Row -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                            <Label Text="🎯" FontSize="16" VerticalOptions="Center"/>
+                                            <VerticalStackLayout Spacing="1">
+                                                <Label Text="Monthly Food Budget" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                                                <Label Text="Student Allowance Tracker" FontSize="11" TextColor="#888888"/>
+                                            </VerticalStackLayout>
+                                        </HorizontalStackLayout>
+
+                                        <Button Grid.Column="1"
+                                                Text="Edit Budget ✏️"
+                                                Command="{Binding SetBudgetCommand}"
+                                                BackgroundColor="#2A2A2A"
+                                                TextColor="#FF9800"
+                                                FontSize="11"
+                                                FontAttributes="Bold"
+                                                CornerRadius="8"
+                                                Padding="10,4"
+                                                HeightRequest="32"
+                                                VerticalOptions="Center"/>
+                                    </Grid>
+
+                                    <!-- Stat Summary Row -->
+                                    <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                                        <Border Grid.Column="0" BackgroundColor="#141414" StrokeThickness="1" Stroke="#2A2A2A" Padding="12,8">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8"/>
+                                            </Border.StrokeShape>
+                                            <VerticalStackLayout Spacing="2">
+                                                <Label Text="Spent This Month" FontSize="11" TextColor="#888888"/>
+                                                <Label Text="{Binding CurrentMonthSpent, StringFormat='${0:F2}'}" FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                                            </VerticalStackLayout>
+                                        </Border>
+
+                                        <Border Grid.Column="1" BackgroundColor="#141414" StrokeThickness="1" Stroke="#2A2A2A" Padding="12,8">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8"/>
+                                            </Border.StrokeShape>
+                                            <VerticalStackLayout Spacing="2">
+                                                <Label Text="Remaining Allowance" FontSize="11" TextColor="#888888"/>
+                                                <Label Text="{Binding RemainingBudget, StringFormat='${0:F2}'}" FontSize="18" FontAttributes="Bold" TextColor="#4CAF50"/>
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Progress Bar & Status -->
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <Label Grid.Column="0" Text="{Binding BudgetStatusText}" FontSize="12" FontAttributes="Bold" TextColor="{Binding BudgetProgressColor}"/>
+                                            <Label Grid.Column="1" Text="{Binding BudgetPercentText, StringFormat='{0} used'}" FontSize="12" TextColor="#AAAAAA"/>
+                                        </Grid>
+
+                                        <ProgressBar Progress="{Binding BudgetProgress}"
+                                                     ProgressColor="{Binding BudgetProgressColor}"
+                                                     BackgroundColor="#2A2A2A"
+                                                     HeightRequest="8"/>
+                                    </VerticalStackLayout>
+
+                                    <!-- Bottom Info: Target Budget & All-time Spend -->
+                                    <Grid ColumnDefinitions="*, Auto" Padding="2,2,2,0">
+                                        <Label Grid.Column="0" Text="{Binding MonthlyBudget, StringFormat='Target Budget: ${0:F2}'}" FontSize="11" TextColor="#777777"/>
+                                        <Label Grid.Column="1" Text="{Binding TotalSpentAllTime, StringFormat='All-Time: ${0:F2}'}" FontSize="11" TextColor="#777777"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Section Header for Order Cards -->
+                            <Label Text="Recent Orders" FontSize="16" FontAttributes="Bold" TextColor="#FF9800" Margin="0,4,0,0"/>
                         </VerticalStackLayout>
                     </CollectionView.Header>
 
