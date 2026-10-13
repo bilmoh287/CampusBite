@@ -87,6 +87,56 @@
                     </Grid>
                 </Border>
 
+                <!-- Cafe Broadcast Announcement Card -->
+                <Border BackgroundColor="#222222" StrokeThickness="1" Stroke="#333333" Padding="14,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
+                                <Label Text="📢 Broadcast Notice:" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                                <Label Text="(Student Menu Banner)" FontSize="11" TextColor="#666666" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Button Grid.Column="1"
+                                    Text="Clear ✕"
+                                    Command="{Binding ClearAnnouncementCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#FF6B6B"
+                                    FontSize="11"
+                                    Padding="8,2"
+                                    HeightRequest="28"
+                                    VerticalOptions="Center"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                            <Border Grid.Column="0" BackgroundColor="#161616" StrokeThickness="1" Stroke="#444444" Padding="10,0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6"/>
+                                </Border.StrokeShape>
+                                <Entry Text="{Binding AnnouncementText}"
+                                       Placeholder="e.g. 20% off all pastries after 3 PM!"
+                                       PlaceholderColor="#666666"
+                                       TextColor="White"
+                                       FontSize="13"
+                                       VerticalOptions="Center"/>
+                            </Border>
+
+                            <Button Grid.Column="1"
+                                    Text="Broadcast 🚀"
+                                    Command="{Binding SaveAnnouncementCommand}"
+                                    BackgroundColor="#FF9800"
+                                    TextColor="Black"
+                                    FontAttributes="Bold"
+                                    FontSize="12"
+                                    CornerRadius="6"
+                                    Padding="14,0"
+                                    HeightRequest="40"
+                                    VerticalOptions="Center"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Section Switcher Tabs (Native Buttons for robust WinUI 3 pointer handling) -->
                 <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
                     <!-- Live Orders Tab Button -->

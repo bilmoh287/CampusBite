@@ -77,7 +77,8 @@ public class AppDbContext : DbContext
                 Description = "Artisanal coffee and fresh pastries inside the main campus library.",
                 Location = "Library 1st Floor",
                 IsOpen = true,
-                ImageUrl = "dotnet_bot.png"
+                ImageUrl = "dotnet_bot.png",
+                Announcement = "☕ Midterm Special: 20% off all large lattes between 2 PM and 5 PM!"
             },
             new Cafe
             {
@@ -86,7 +87,8 @@ public class AppDbContext : DbContext
                 Description = "Fast-grab sandwiches, energy smoothies, and espresso for engineers.",
                 Location = "Engineering Building Block C",
                 IsOpen = true,
-                ImageUrl = "dotnet_bot.png"
+                ImageUrl = "dotnet_bot.png",
+                Announcement = "⚡ Fresh sourdough paninis baked daily at 11 AM."
             },
             new Cafe
             {
@@ -95,7 +97,8 @@ public class AppDbContext : DbContext
                 Description = "Budget-friendly hot meals, burgers, and student combo deals.",
                 Location = "Student Union Center",
                 IsOpen = false,
-                ImageUrl = "dotnet_bot.png"
+                ImageUrl = "dotnet_bot.png",
+                Announcement = null
             }
         );
 

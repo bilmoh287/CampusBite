@@ -8,6 +8,7 @@ public class Cafe
     public string Location { get; set; } = string.Empty;
     public bool IsOpen { get; set; } = true;
     public string ImageUrl { get; set; } = string.Empty;
+    public string? Announcement { get; set; }
 
     // Navigation properties
     public ICollection<Product> Products { get; set; } = new List<Product>();

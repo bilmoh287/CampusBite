@@ -76,4 +76,14 @@ public class CafeAdminService : ICafeAdminService
         await _dbContext.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement)
+    {
+        var cafe = await _dbContext.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
+        if (cafe == null) return false;
+
+        cafe.Announcement = string.IsNullOrWhiteSpace(announcement) ? null : announcement.Trim();
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }

@@ -14,9 +14,13 @@ public partial class CafeMenuViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCafeClosed))]
+    [NotifyPropertyChangedFor(nameof(HasAnnouncement))]
+    [NotifyPropertyChangedFor(nameof(Announcement))]
     private Cafe? _cafe;
 
     public bool IsCafeClosed => Cafe != null && !Cafe.IsOpen;
+    public bool HasAnnouncement => !string.IsNullOrWhiteSpace(Cafe?.Announcement);
+    public string Announcement => Cafe?.Announcement ?? string.Empty;
 
     public ObservableCollection<Product> Products { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();

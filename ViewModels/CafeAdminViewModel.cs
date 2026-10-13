@@ -39,6 +39,9 @@ public partial class CafeAdminViewModel : ObservableObject
     [ObservableProperty]
     private bool _isCafeOpen = true;
 
+    [ObservableProperty]
+    private string _announcementText = string.Empty;
+
     private bool _isBusy;
     private bool _isInitializing;
 
@@ -53,11 +56,43 @@ public partial class CafeAdminViewModel : ObservableObject
         {
             _isCafeOpen = value.IsOpen;
             OnPropertyChanged(nameof(IsCafeOpen));
+            AnnouncementText = value.Announcement ?? string.Empty;
 
             if (!_isInitializing && !_isBusy)
             {
                 _ = LoadSectionDataAsync();
             }
+        }
+    }
+
+    [RelayCommand]
+    public async Task SaveAnnouncementAsync()
+    {
+        if (SelectedCafe == null || _isBusy) return;
+
+        bool updated = await _adminService.UpdateCafeAnnouncementAsync(SelectedCafe.Id, AnnouncementText);
+        if (updated)
+        {
+            SelectedCafe.Announcement = string.IsNullOrWhiteSpace(AnnouncementText) ? null : AnnouncementText.Trim();
+            await Shell.Current.DisplayAlertAsync("Broadcast Updated 📢", $"Announcement updated for {SelectedCafe.Name}. Students will see this at the top of the menu.", "OK");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlertAsync("Error", "Failed to update announcement.", "OK");
+        }
+    }
+
+    [RelayCommand]
+    public async Task ClearAnnouncementAsync()
+    {
+        if (SelectedCafe == null || _isBusy) return;
+
+        AnnouncementText = string.Empty;
+        bool updated = await _adminService.UpdateCafeAnnouncementAsync(SelectedCafe.Id, null);
+        if (updated)
+        {
+            SelectedCafe.Announcement = null;
+            await Shell.Current.DisplayAlertAsync("Announcement Cleared 🧹", $"Active announcement removed from {SelectedCafe.Name}.", "OK");
         }
     }
 

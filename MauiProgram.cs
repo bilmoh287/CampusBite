@@ -64,6 +64,15 @@ public static class MauiProgram
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             dbContext.Database.EnsureCreated();
+
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Cafes ADD COLUMN Announcement TEXT;");
+            }
+            catch
+            {
+                // Column already exists or table was just created
+            }
         }
 
         return app;
