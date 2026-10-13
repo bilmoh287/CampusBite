@@ -73,6 +73,24 @@ public static class MauiProgram
             {
                 // Column already exists or table was just created
             }
+
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Orders ADD COLUMN DeliveryLocation TEXT;");
+            }
+            catch
+            {
+                // Column already exists or table was just created
+            }
+
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Orders ADD COLUMN Notes TEXT;");
+            }
+            catch
+            {
+                // Column already exists or table was just created
+            }
         }
 
         return app;

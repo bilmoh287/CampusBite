@@ -242,6 +242,38 @@
 
                                     <BoxView HeightRequest="1" Color="#2A2A2A"/>
 
+                                    <!-- Delivery Location Badge (Visible for Delivery Orders) -->
+                                    <Border BackgroundColor="#1E2A38"
+                                            Stroke="#2196F3"
+                                            StrokeThickness="1"
+                                            Padding="8,4"
+                                            IsVisible="{Binding HasDeliveryLocation}">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Label Text="📍" FontSize="11" VerticalOptions="Center"/>
+                                            <Label Text="Drop-off:" FontSize="11" FontAttributes="Bold" TextColor="#2196F3" VerticalOptions="Center"/>
+                                            <Label Text="{Binding DeliveryLocation}" FontSize="12" TextColor="White" VerticalOptions="Center"/>
+                                        </HorizontalStackLayout>
+                                    </Border>
+
+                                    <!-- Special Kitchen Notes Badge -->
+                                    <Border BackgroundColor="#2D2B1E"
+                                            Stroke="#FFC107"
+                                            StrokeThickness="1"
+                                            Padding="8,4"
+                                            IsVisible="{Binding HasNotes}">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Label Text="📝" FontSize="11" VerticalOptions="Center"/>
+                                            <Label Text="Note:" FontSize="11" FontAttributes="Bold" TextColor="#FFC107" VerticalOptions="Center"/>
+                                            <Label Text="{Binding Notes}" FontSize="12" TextColor="#CCCCCC" FontAttributes="Italic" VerticalOptions="Center"/>
+                                        </HorizontalStackLayout>
+                                    </Border>
+
                                     <!-- Items List Preview using BindableLayout (WinUI Safe) -->
                                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding OrderItems}" Spacing="3">
                                         <BindableLayout.ItemTemplate>

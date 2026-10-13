@@ -19,7 +19,9 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("Cannot create an order from an empty cart.");
         }
 
-        decimal totalAmount = itemsList.Sum(i => i.TotalPrice);
+        decimal subtotal = itemsList.Sum(i => i.TotalPrice);
+        decimal deliveryFee = string.Equals(orderType, "Delivery", StringComparison.OrdinalIgnoreCase) ? 2.50m : 0.00m;
+        decimal totalAmount = subtotal + deliveryFee;
 
         var order = new Order
         {
@@ -27,7 +29,9 @@ public class OrderService : IOrderService
             OrderDate = DateTime.Now,
             TotalAmount = totalAmount,
             Status = "Pending",
-            OrderType = orderType
+            OrderType = orderType,
+            DeliveryLocation = string.IsNullOrWhiteSpace(deliveryLocation) ? null : deliveryLocation.Trim(),
+            Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
         };
 
         foreach (var cartItem in itemsList)

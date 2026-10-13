@@ -8,6 +8,13 @@ public class Order
     public decimal TotalAmount { get; set; }
     public string Status { get; set; } = "Pending";
     public string OrderType { get; set; } = "Pickup";
+    public string? DeliveryLocation { get; set; }
+    public string? Notes { get; set; }
+
+    // Helper properties for XAML bindings
+    public bool HasDeliveryLocation => !string.IsNullOrWhiteSpace(DeliveryLocation);
+    public bool HasNotes => !string.IsNullOrWhiteSpace(Notes);
+    public bool IsDelivery => OrderType == "Delivery";
 
     // Navigation properties
     public Cafe? Cafe { get; set; }

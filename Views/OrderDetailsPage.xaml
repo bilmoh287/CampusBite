@@ -44,6 +44,42 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Delivery Destination Card (Visible for Delivery Orders) -->
+            <Border BackgroundColor="#1E1E1E"
+                    StrokeThickness="1"
+                    Stroke="#333333"
+                    Padding="16"
+                    IsVisible="{Binding Order.HasDeliveryLocation}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="📍" FontSize="14" VerticalOptions="Center"/>
+                        <Label Text="Campus Drop-off Location" FontSize="13" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding Order.DeliveryLocation}" FontSize="14" TextColor="White" Margin="22,0,0,0"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Special Instructions / Notes Card (Visible if Notes exist) -->
+            <Border BackgroundColor="#1E1E1E"
+                    StrokeThickness="1"
+                    Stroke="#333333"
+                    Padding="16"
+                    IsVisible="{Binding Order.HasNotes}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="📝" FontSize="14" VerticalOptions="Center"/>
+                        <Label Text="Kitchen &amp; Delivery Notes" FontSize="13" FontAttributes="Bold" TextColor="#4CAF50" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding Order.Notes}" FontSize="13" TextColor="#CCCCCC" FontAttributes="Italic" Margin="22,0,0,0"/>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Itemized Table Card -->
             <VerticalStackLayout Spacing="8">
                 <Label Text="Item Breakdown" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
