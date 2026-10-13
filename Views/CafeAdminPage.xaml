@@ -344,10 +344,32 @@
                                     <!-- Product Details -->
                                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                         <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="White"/>
-                                        <HorizontalStackLayout Spacing="8">
-                                            <Label Text="{Binding Category}" FontSize="11" TextColor="#FF9800" FontAttributes="Bold"/>
-                                            <Label Text="•" FontSize="11" TextColor="#666666"/>
-                                            <Label Text="{Binding Price, StringFormat='${0:F2}'}" FontSize="12" TextColor="#CCCCCC"/>
+                                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                            <Label Text="{Binding Category}" FontSize="11" TextColor="#FF9800" FontAttributes="Bold" VerticalOptions="Center"/>
+                                            <Label Text="•" FontSize="11" TextColor="#666666" VerticalOptions="Center"/>
+                                            
+                                            <!-- Interactive Price Pill with Edit Prompt -->
+                                            <Border BackgroundColor="#2A2A2A"
+                                                    Stroke="#444444"
+                                                    StrokeThickness="1"
+                                                    Padding="8,2"
+                                                    VerticalOptions="Center">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="6"/>
+                                                </Border.StrokeShape>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=EditProductPriceCommand}"
+                                                                          CommandParameter="{Binding .}"/>
+                                                </Border.GestureRecognizers>
+                                                <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                                    <Label Text="{Binding Price, StringFormat='${0:F2}'}"
+                                                           FontSize="12"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#4CAF50"
+                                                           VerticalOptions="Center"/>
+                                                    <Label Text="✏️" FontSize="10" VerticalOptions="Center"/>
+                                                </HorizontalStackLayout>
+                                            </Border>
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
 

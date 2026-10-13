@@ -67,6 +67,16 @@ public class CafeAdminService : ICafeAdminService
         return true;
     }
 
+    public async Task<bool> UpdateProductPriceAsync(int productId, decimal newPrice)
+    {
+        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+        if (product == null) return false;
+
+        product.Price = newPrice;
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
     {
         var cafe = await _dbContext.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);

@@ -261,6 +261,64 @@ public partial class CafeAdminViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task EditProductPriceAsync(Product product)
+    {
+        if (product == null) return;
+
+        string result = await Shell.Current.DisplayPromptAsync(
+            "Update Price 🏷️",
+            $"Enter new price for {product.Name}:",
+            initialValue: product.Price.ToString("0.00"),
+            maxLength: 8,
+            keyboard: Keyboard.Numeric,
+            accept: "Save",
+            cancel: "Cancel");
+
+        if (string.IsNullOrWhiteSpace(result)) return;
+
+        if (!decimal.TryParse(result, System.Globalization.NumberStyles.Currency | System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out decimal newPrice) &&
+            !decimal.TryParse(result, out newPrice))
+        {
+            await Shell.Current.DisplayAlertAsync("Invalid Price", "Please enter a valid numeric price (e.g. 4.50).", "OK");
+            return;
+        }
+
+        if (newPrice <= 0)
+        {
+            await Shell.Current.DisplayAlertAsync("Invalid Price", "Price must be greater than $0.00.", "OK");
+            return;
+        }
+
+        bool updated = await _adminService.UpdateProductPriceAsync(product.Id, newPrice);
+        if (updated)
+        {
+            product.Price = newPrice;
+            int index = CafeProducts.IndexOf(product);
+            if (index >= 0)
+            {
+                CafeProducts[index] = new Product
+                {
+                    Id = product.Id,
+                    CafeId = product.CafeId,
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = newPrice,
+                    Category = product.Category,
+                    IsAvailable = product.IsAvailable,
+                    ImageUrl = product.ImageUrl,
+                    Cafe = product.Cafe
+                };
+            }
+
+            await Shell.Current.DisplayAlertAsync("Price Updated 🏷️", $"Price for '{product.Name}' updated to ${newPrice:F2}.", "OK");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlertAsync("Error", "Failed to update price in database.", "OK");
+        }
+    }
+
+    [RelayCommand]
     public async Task LoadOrdersAsync()
     {
         if (_isBusy || SelectedCafe == null) return;
