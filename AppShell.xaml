@@ -23,6 +23,11 @@
             Route="OrderHistoryPage" />
 
         <ShellContent
+            Title="Courier"
+            ContentTemplate="{DataTemplate views:DeliveryRunnerPage}"
+            Route="DeliveryRunnerPage" />
+
+        <ShellContent
             Title="Admin"
             ContentTemplate="{DataTemplate views:CafeAdminPage}"
             Route="CafeAdminPage" />
