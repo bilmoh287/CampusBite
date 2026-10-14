@@ -94,6 +94,24 @@ public static class MauiProgram
             {
                 // Column already exists or table was just created
             }
+
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN StockQuantity INTEGER;");
+            }
+            catch
+            {
+                // Column already exists or table was just created
+            }
+
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN LowStockThreshold INTEGER DEFAULT 5;");
+            }
+            catch
+            {
+                // Column already exists or table was just created
+            }
         }
 
         return app;

@@ -77,6 +77,24 @@ public class CafeAdminService : ICafeAdminService
         return true;
     }
 
+    public async Task<bool> UpdateProductStockAsync(int productId, int? stockQuantity)
+    {
+        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+        if (product == null) return false;
+
+        product.StockQuantity = stockQuantity;
+        if (stockQuantity.HasValue)
+        {
+            if (stockQuantity.Value == 0)
+                product.IsAvailable = false;
+            else if (stockQuantity.Value > 0 && !product.IsAvailable)
+                product.IsAvailable = true;
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
     {
         var cafe = await _dbContext.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);

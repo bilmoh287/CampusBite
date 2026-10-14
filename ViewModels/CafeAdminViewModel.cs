@@ -222,6 +222,28 @@ public partial class CafeAdminViewModel : ObservableObject
         IsStockEmpty = CafeProducts.Count == 0;
     }
 
+    private void ReplaceProductInCollection(Product product)
+    {
+        int index = CafeProducts.IndexOf(product);
+        if (index >= 0)
+        {
+            CafeProducts[index] = new Product
+            {
+                Id = product.Id,
+                CafeId = product.CafeId,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Category = product.Category,
+                IsAvailable = product.IsAvailable,
+                ImageUrl = product.ImageUrl,
+                StockQuantity = product.StockQuantity,
+                LowStockThreshold = product.LowStockThreshold,
+                Cafe = product.Cafe
+            };
+        }
+    }
+
     [RelayCommand]
     public async Task ToggleProductAvailabilityAsync(Product product)
     {
@@ -232,24 +254,7 @@ public partial class CafeAdminViewModel : ObservableObject
         if (updated)
         {
             product.IsAvailable = targetStatus;
-
-            // Trigger CollectionView re-bind by replacing item in ObservableCollection
-            int index = CafeProducts.IndexOf(product);
-            if (index >= 0)
-            {
-                CafeProducts[index] = new Product
-                {
-                    Id = product.Id,
-                    CafeId = product.CafeId,
-                    Name = product.Name,
-                    Description = product.Description,
-                    Price = product.Price,
-                    Category = product.Category,
-                    IsAvailable = targetStatus,
-                    ImageUrl = product.ImageUrl,
-                    Cafe = product.Cafe
-                };
-            }
+            ReplaceProductInCollection(product);
 
             string badge = targetStatus ? "IN STOCK ✅" : "SOLD OUT ❌";
             await Shell.Current.DisplayAlertAsync("Inventory Updated", $"'{product.Name}' is now marked {badge}.", "OK");
@@ -257,6 +262,83 @@ public partial class CafeAdminViewModel : ObservableObject
         else
         {
             await Shell.Current.DisplayAlertAsync("Error", "Failed to update item availability in database.", "OK");
+        }
+    }
+
+    [RelayCommand]
+    public async Task IncreaseStockAsync(Product product)
+    {
+        if (product == null) return;
+
+        int newQty = (product.StockQuantity ?? 10) + 1;
+        bool updated = await _adminService.UpdateProductStockAsync(product.Id, newQty);
+        if (updated)
+        {
+            product.StockQuantity = newQty;
+            product.IsAvailable = true;
+            ReplaceProductInCollection(product);
+        }
+    }
+
+    [RelayCommand]
+    public async Task DecreaseStockAsync(Product product)
+    {
+        if (product == null) return;
+
+        int current = product.StockQuantity ?? 10;
+        int newQty = Math.Max(0, current - 1);
+        bool updated = await _adminService.UpdateProductStockAsync(product.Id, newQty);
+        if (updated)
+        {
+            product.StockQuantity = newQty;
+            if (newQty == 0) product.IsAvailable = false;
+            ReplaceProductInCollection(product);
+        }
+    }
+
+    [RelayCommand]
+    public async Task EditStockCountAsync(Product product)
+    {
+        if (product == null) return;
+
+        string currentVal = product.StockQuantity.HasValue ? product.StockQuantity.Value.ToString() : string.Empty;
+        string result = await Shell.Current.DisplayPromptAsync(
+            "Stock Inventory 📦",
+            $"Set stock count for {product.Name}:\n(Leave empty to switch back to simple toggle mode)",
+            initialValue: currentVal,
+            maxLength: 5,
+            keyboard: Keyboard.Numeric,
+            accept: "Save",
+            cancel: "Cancel");
+
+        if (result == null) return; // Cancel pressed
+
+        int? newStock = null;
+        if (!string.IsNullOrWhiteSpace(result))
+        {
+            if (int.TryParse(result, out int parsed) && parsed >= 0)
+            {
+                newStock = parsed;
+            }
+            else
+            {
+                await Shell.Current.DisplayAlertAsync("Invalid Quantity", "Please enter a valid positive number or leave empty.", "OK");
+                return;
+            }
+        }
+
+        bool updated = await _adminService.UpdateProductStockAsync(product.Id, newStock);
+        if (updated)
+        {
+            product.StockQuantity = newStock;
+            if (newStock.HasValue && newStock.Value == 0) product.IsAvailable = false;
+            else if (newStock.HasValue && newStock.Value > 0) product.IsAvailable = true;
+            ReplaceProductInCollection(product);
+
+            string msg = newStock.HasValue 
+                ? $"Stock for '{product.Name}' set to {newStock.Value} units."
+                : $"Stock tracking disabled for '{product.Name}'. Now in simple toggle mode.";
+            await Shell.Current.DisplayAlertAsync("Stock Updated 📦", msg, "OK");
         }
     }
 
@@ -293,23 +375,7 @@ public partial class CafeAdminViewModel : ObservableObject
         if (updated)
         {
             product.Price = newPrice;
-            int index = CafeProducts.IndexOf(product);
-            if (index >= 0)
-            {
-                CafeProducts[index] = new Product
-                {
-                    Id = product.Id,
-                    CafeId = product.CafeId,
-                    Name = product.Name,
-                    Description = product.Description,
-                    Price = newPrice,
-                    Category = product.Category,
-                    IsAvailable = product.IsAvailable,
-                    ImageUrl = product.ImageUrl,
-                    Cafe = product.Cafe
-                };
-            }
-
+            ReplaceProductInCollection(product);
             await Shell.Current.DisplayAlertAsync("Price Updated 🏷️", $"Price for '{product.Name}' updated to ${newPrice:F2}.", "OK");
         }
         else

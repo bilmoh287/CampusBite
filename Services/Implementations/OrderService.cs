@@ -42,6 +42,17 @@ public class OrderService : IOrderService
                 Quantity = cartItem.Quantity,
                 UnitPrice = cartItem.Product.Price
             });
+
+            // Automatically decrement stock if the café is tracking inventory for this item
+            var dbProduct = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == cartItem.Product.Id);
+            if (dbProduct != null && dbProduct.StockQuantity.HasValue)
+            {
+                dbProduct.StockQuantity = Math.Max(0, dbProduct.StockQuantity.Value - cartItem.Quantity);
+                if (dbProduct.StockQuantity.Value == 0)
+                {
+                    dbProduct.IsAvailable = false;
+                }
+            }
         }
 
         _dbContext.Orders.Add(order);

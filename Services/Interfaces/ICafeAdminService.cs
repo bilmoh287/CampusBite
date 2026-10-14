@@ -8,6 +8,7 @@ public interface ICafeAdminService
     Task<List<Product>> GetCafeProductsAsync(int cafeId);
     Task<bool> ToggleProductAvailabilityAsync(int productId, bool isAvailable);
     Task<bool> UpdateProductPriceAsync(int productId, decimal newPrice);
+    Task<bool> UpdateProductStockAsync(int productId, int? stockQuantity);
     Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen);
     Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement);
 }

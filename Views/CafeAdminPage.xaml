@@ -405,54 +405,109 @@
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
-                                    <!-- Interactive Stock Toggle Pill -->
-                                    <Border Grid.Column="2"
-                                            StrokeThickness="1"
-                                            Padding="10,6"
-                                            VerticalOptions="Center">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="14"/>
-                                        </Border.StrokeShape>
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=ToggleProductAvailabilityCommand}"
-                                                                  CommandParameter="{Binding .}"/>
-                                        </Border.GestureRecognizers>
-                                        <Border.Triggers>
-                                            <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="#1A3826"/>
-                                                <Setter Property="Stroke" Value="#4CAF50"/>
-                                            </DataTrigger>
-                                            <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="False">
-                                                <Setter Property="BackgroundColor" Value="#3D1A1A"/>
-                                                <Setter Property="Stroke" Value="#F44336"/>
-                                            </DataTrigger>
-                                        </Border.Triggers>
+                                    <!-- Column 2: Availability & Optional Stock Stepper -->
+                                    <VerticalStackLayout Grid.Column="2" Spacing="4" VerticalOptions="Center" HorizontalOptions="End">
+                                        <!-- Primary Toggle Pill (Cook's 1-Tap In Stock / Sold Out) -->
+                                        <Border StrokeThickness="1"
+                                                Padding="10,6"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Center">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="14"/>
+                                            </Border.StrokeShape>
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=ToggleProductAvailabilityCommand}"
+                                                                      CommandParameter="{Binding .}"/>
+                                            </Border.GestureRecognizers>
+                                            <Border.Triggers>
+                                                <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="True">
+                                                    <Setter Property="BackgroundColor" Value="#1A3826"/>
+                                                    <Setter Property="Stroke" Value="#4CAF50"/>
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="False">
+                                                    <Setter Property="BackgroundColor" Value="#3D1A1A"/>
+                                                    <Setter Property="Stroke" Value="#F44336"/>
+                                                </DataTrigger>
+                                            </Border.Triggers>
 
-                                        <HorizontalStackLayout Spacing="4">
-                                            <Label FontSize="12">
-                                                <Label.Triggers>
-                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="True">
-                                                        <Setter Property="Text" Value="✅"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="False">
-                                                        <Setter Property="Text" Value="❌"/>
-                                                    </DataTrigger>
-                                                </Label.Triggers>
-                                            </Label>
-                                            <Label FontSize="11" FontAttributes="Bold" VerticalOptions="Center">
-                                                <Label.Triggers>
-                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="True">
-                                                        <Setter Property="Text" Value="IN STOCK"/>
-                                                        <Setter Property="TextColor" Value="#4CAF50"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="False">
-                                                        <Setter Property="Text" Value="SOLD OUT"/>
-                                                        <Setter Property="TextColor" Value="#F44336"/>
-                                                    </DataTrigger>
-                                                </Label.Triggers>
-                                            </Label>
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label FontSize="12">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="True">
+                                                            <Setter Property="Text" Value="✅"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="False">
+                                                            <Setter Property="Text" Value="❌"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                                <Label FontSize="11" FontAttributes="Bold" VerticalOptions="Center">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="True">
+                                                            <Setter Property="Text" Value="IN STOCK"/>
+                                                            <Setter Property="TextColor" Value="#4CAF50"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding IsAvailable}" Value="False">
+                                                            <Setter Property="Text" Value="SOLD OUT"/>
+                                                            <Setter Property="TextColor" Value="#F44336"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </HorizontalStackLayout>
+                                        </Border>
+
+                                        <!-- Optional Numeric Stepper (Only visible when cook tracks units) -->
+                                        <HorizontalStackLayout Spacing="4" HorizontalOptions="End" IsVisible="{Binding HasTrackedStock}">
+                                            <Border BackgroundColor="#2A2A2A" Stroke="#444444" StrokeThickness="1" Padding="6,2">
+                                                <Border.StrokeShape><RoundRectangle CornerRadius="4"/></Border.StrokeShape>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=DecreaseStockCommand}"
+                                                                          CommandParameter="{Binding .}"/>
+                                                </Border.GestureRecognizers>
+                                                <Label Text="-" FontSize="12" FontAttributes="Bold" TextColor="White"/>
+                                            </Border>
+
+                                            <Border BackgroundColor="#1E1E1E" Stroke="#333333" StrokeThickness="1" Padding="6,2">
+                                                <Border.StrokeShape><RoundRectangle CornerRadius="4"/></Border.StrokeShape>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=EditStockCountCommand}"
+                                                                          CommandParameter="{Binding .}"/>
+                                                </Border.GestureRecognizers>
+                                                <Label Text="{Binding StockQuantity, StringFormat='{0} left'}" FontSize="10" TextColor="#CCCCCC" VerticalOptions="Center"/>
+                                            </Border>
+
+                                            <Border BackgroundColor="#2A2A2A" Stroke="#444444" StrokeThickness="1" Padding="6,2">
+                                                <Border.StrokeShape><RoundRectangle CornerRadius="4"/></Border.StrokeShape>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=IncreaseStockCommand}"
+                                                                          CommandParameter="{Binding .}"/>
+                                                </Border.GestureRecognizers>
+                                                <Label Text="+" FontSize="12" FontAttributes="Bold" TextColor="White"/>
+                                            </Border>
                                         </HorizontalStackLayout>
-                                    </Border>
+
+                                        <!-- Low Stock Warning Pill -->
+                                        <Border BackgroundColor="#2C2415" Stroke="#FF9800" StrokeThickness="1" Padding="6,1" HorizontalOptions="End" IsVisible="{Binding IsLowStock}">
+                                            <Border.StrokeShape><RoundRectangle CornerRadius="4"/></Border.StrokeShape>
+                                            <Label Text="⚠️ Low Stock" FontSize="9" FontAttributes="Bold" TextColor="#FF9800"/>
+                                        </Border>
+
+                                        <!-- Optional Count Activation Link (When untracked) -->
+                                        <Label Text="+ Track Qty"
+                                               FontSize="10"
+                                               TextColor="#666666"
+                                               HorizontalOptions="End">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=EditStockCountCommand}"
+                                                                      CommandParameter="{Binding .}"/>
+                                            </Label.GestureRecognizers>
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding HasTrackedStock}" Value="True">
+                                                    <Setter Property="IsVisible" Value="False"/>
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </VerticalStackLayout>
                                 </Grid>
                             </Border>
                         </Grid>
