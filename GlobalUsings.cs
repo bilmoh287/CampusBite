@@ -4,6 +4,7 @@ global using System.Collections.ObjectModel;
 global using System.Linq;
 global using System.Threading.Tasks;
 
+global using CampusBite.DTOs;
 global using CampusBite.Data;
 global using CampusBite.Models;
 global using CampusBite.Models.UI;

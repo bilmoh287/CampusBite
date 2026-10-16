@@ -1,12 +1,17 @@
 namespace CampusBite.Models;
 
-public class Order
+public partial class Order : ObservableObject
 {
     public int Id { get; set; }
     public int CafeId { get; set; }
     public DateTime OrderDate { get; set; } = DateTime.Now;
     public decimal TotalAmount { get; set; }
-    public string Status { get; set; } = "Pending";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTerminalStatus))]
+    [NotifyPropertyChangedFor(nameof(CanBeCancelled))]
+    private string _status = "Pending";
+
     public string OrderType { get; set; } = "Pickup";
     public string? DeliveryLocation { get; set; }
     public string? Notes { get; set; }
@@ -15,6 +20,10 @@ public class Order
     public bool HasDeliveryLocation => !string.IsNullOrWhiteSpace(DeliveryLocation);
     public bool HasNotes => !string.IsNullOrWhiteSpace(Notes);
     public bool IsDelivery => OrderType == "Delivery";
+
+    // Helper properties for ticket action buttons UX
+    public bool IsTerminalStatus => Status == "Completed" || Status == "Cancelled";
+    public bool CanBeCancelled => !IsTerminalStatus;
 
     // Navigation properties
     public Cafe? Cafe { get; set; }

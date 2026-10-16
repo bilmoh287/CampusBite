@@ -13,10 +13,39 @@ public partial class CafeAdminViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOrdersSectionActive))]
     [NotifyPropertyChangedFor(nameof(IsStockSectionActive))]
+    [NotifyPropertyChangedFor(nameof(IsSalesSectionActive))]
     private string _activeSection = "Orders";
 
     public bool IsOrdersSectionActive => ActiveSection == "Orders";
     public bool IsStockSectionActive => ActiveSection == "Stock";
+    public bool IsSalesSectionActive => ActiveSection == "Sales";
+
+    [ObservableProperty]
+    private decimal _todayRevenue;
+
+    [ObservableProperty]
+    private decimal _monthRevenue;
+
+    [ObservableProperty]
+    private int _totalCompletedOrders;
+
+    [ObservableProperty]
+    private decimal _averageTicketValue;
+
+    [ObservableProperty]
+    private int _pickupOrderCount;
+
+    [ObservableProperty]
+    private int _deliveryOrderCount;
+
+    [ObservableProperty]
+    private ObservableCollection<TopSellingItemDto> _topSellingItems = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoSalesData))]
+    private bool _hasSalesData;
+
+    public bool HasNoSalesData => !HasSalesData;
 
     [ObservableProperty]
     private ObservableCollection<Product> _cafeProducts = new();
@@ -164,6 +193,10 @@ public partial class CafeAdminViewModel : ObservableObject
             IsRefreshing = true;
             await LoadOrdersInternalAsync();
             await LoadProductsInternalAsync();
+            if (ActiveSection == "Sales")
+            {
+                await ComputeSalesMetricsInternalAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -190,6 +223,78 @@ public partial class CafeAdminViewModel : ObservableObject
         {
             await LoadOrdersInternalAsync();
         }
+        else if (ActiveSection == "Sales")
+        {
+            await ComputeSalesMetricsAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task ComputeSalesMetricsAsync()
+    {
+        if (SelectedCafe == null || _isBusy) return;
+
+        try
+        {
+            _isBusy = true;
+            IsRefreshing = true;
+            await ComputeSalesMetricsInternalAsync();
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Error", $"Failed to calculate sales: {ex.Message}", "OK");
+        }
+        finally
+        {
+            _isBusy = false;
+            IsRefreshing = false;
+        }
+    }
+
+    private async Task ComputeSalesMetricsInternalAsync()
+    {
+        if (SelectedCafe == null) return;
+
+        var allOrders = await _adminService.GetCafeOrdersAsync(SelectedCafe.Id, null);
+        var today = DateTime.Today;
+        var thisMonth = today.Month;
+        var thisYear = today.Year;
+
+        var validOrders = allOrders.Where(o => o.Status != "Cancelled").ToList();
+
+        TodayRevenue = validOrders
+            .Where(o => o.OrderDate.Date == today)
+            .Sum(o => o.TotalAmount);
+
+        MonthRevenue = validOrders
+            .Where(o => o.OrderDate.Year == thisYear && o.OrderDate.Month == thisMonth)
+            .Sum(o => o.TotalAmount);
+
+        TotalCompletedOrders = validOrders
+            .Count(o => o.Status == "Completed" || o.Status == "Delivered");
+
+        AverageTicketValue = validOrders.Any()
+            ? validOrders.Average(o => o.TotalAmount)
+            : 0.00m;
+
+        PickupOrderCount = allOrders.Count(o => o.OrderType == "Pickup");
+        DeliveryOrderCount = allOrders.Count(o => o.OrderType == "Delivery");
+
+        var topItems = allOrders
+            .SelectMany(o => o.OrderItems)
+            .GroupBy(oi => oi.Product != null ? oi.Product.Name : "Meal Item")
+            .Select(g => new TopSellingItemDto
+            {
+                Name = g.Key,
+                QuantitySold = g.Sum(oi => oi.Quantity),
+                TotalRevenue = g.Sum(oi => oi.Quantity * oi.UnitPrice)
+            })
+            .OrderByDescending(t => t.QuantitySold)
+            .Take(5)
+            .ToList();
+
+        TopSellingItems = new ObservableCollection<TopSellingItemDto>(topItems);
+        HasSalesData = validOrders.Any();
     }
 
     [RelayCommand]
@@ -446,7 +551,7 @@ public partial class CafeAdminViewModel : ObservableObject
     [RelayCommand]
     private async Task AdvanceStatusAsync(Order order)
     {
-        if (order == null || order.Status == "Completed") return;
+        if (order == null || order.Status == "Completed" || order.Status == "Cancelled") return;
         string nextStatus = order.Status switch
         {
             "Pending" => "Preparing",
@@ -457,6 +562,22 @@ public partial class CafeAdminViewModel : ObservableObject
         await ExecuteStatusUpdate(order, nextStatus);
     }
 
+    [RelayCommand]
+    private async Task CancelOrderAsync(Order order)
+    {
+        if (order == null || order.Status == "Completed" || order.Status == "Cancelled") return;
+
+        bool confirm = await Shell.Current.DisplayAlertAsync(
+            "Cancel Ticket ⚠️",
+            $"Are you sure you want to cancel Ticket #{order.Id}?",
+            "Yes, Cancel",
+            "No");
+
+        if (!confirm) return;
+
+        await ExecuteStatusUpdate(order, "Cancelled");
+    }
+
     private async Task ExecuteStatusUpdate(Order order, string newStatus)
     {
         if (order == null || string.IsNullOrWhiteSpace(newStatus)) return;
@@ -465,8 +586,29 @@ public partial class CafeAdminViewModel : ObservableObject
         if (updated)
         {
             order.Status = newStatus;
-            await Shell.Current.DisplayAlertAsync("Order Updated 🔔", $"Order #{order.Id} status updated to '{newStatus}'.", "OK");
-            await LoadOrdersInternalAsync();
+
+            // Only show alert upon completion or cancellation to avoid annoying popups during fast kitchen prep
+            if (newStatus == "Completed")
+            {
+                await Shell.Current.DisplayAlertAsync("Order Completed ✔️", $"Ticket #{order.Id} is marked Completed and ready for pickup/delivery.", "OK");
+            }
+            else if (newStatus == "Cancelled")
+            {
+                await Shell.Current.DisplayAlertAsync("Order Cancelled ✕", $"Ticket #{order.Id} has been cancelled.", "OK");
+            }
+
+            // If a filter like "Pending" is active, smoothly remove from list without rebuilding entire collection
+            if (SelectedStatusFilter != "All" && newStatus != SelectedStatusFilter)
+            {
+                IncomingOrders.Remove(order);
+                IsEmpty = IncomingOrders.Count == 0;
+            }
+
+            // Deliberately do NOT call LoadOrdersInternalAsync() here so scroll position remains intact!
+        }
+        else
+        {
+            await Shell.Current.DisplayAlertAsync("Error", "Failed to update order status in database.", "OK");
         }
     }
 }

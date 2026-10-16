@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:CampusBite.ViewModels"
              xmlns:models="clr-namespace:CampusBite.Models"
+             xmlns:dto="clr-namespace:CampusBite.DTOs"
              x:Class="CampusBite.Views.CafeAdminPage"
              x:DataType="vm:CafeAdminViewModel"
              Title="Staff Dashboard ⚙️"
@@ -138,15 +139,15 @@
                 </Border>
 
                 <!-- Section Switcher Tabs (Native Buttons for robust WinUI 3 pointer handling) -->
-                <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
                     <!-- Live Orders Tab Button -->
                     <Button Grid.Column="0"
-                            Text="🎫 Live Tickets"
+                            Text="🎫 Tickets"
                             Command="{Binding SwitchSectionCommand}"
                             CommandParameter="Orders"
                             CornerRadius="8"
                             FontAttributes="Bold"
-                            FontSize="13"
+                            FontSize="12"
                             HeightRequest="42">
                         <Button.Triggers>
                             <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="True">
@@ -162,12 +163,12 @@
 
                     <!-- Menu & Stock Tab Button -->
                     <Button Grid.Column="1"
-                            Text="🍔 Menu &amp; Stock"
+                            Text="🍔 Stock"
                             Command="{Binding SwitchSectionCommand}"
                             CommandParameter="Stock"
                             CornerRadius="8"
                             FontAttributes="Bold"
-                            FontSize="13"
+                            FontSize="12"
                             HeightRequest="42">
                         <Button.Triggers>
                             <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="True">
@@ -175,6 +176,27 @@
                                 <Setter Property="TextColor" Value="Black"/>
                             </DataTrigger>
                             <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="False">
+                                <Setter Property="BackgroundColor" Value="#222222"/>
+                                <Setter Property="TextColor" Value="White"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <!-- Sales & Analytics Tab Button -->
+                    <Button Grid.Column="2"
+                            Text="📊 Sales"
+                            Command="{Binding SwitchSectionCommand}"
+                            CommandParameter="Sales"
+                            CornerRadius="8"
+                            FontAttributes="Bold"
+                            FontSize="12"
+                            HeightRequest="42">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSalesSectionActive}" Value="True">
+                                <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                <Setter Property="TextColor" Value="Black"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSalesSectionActive}" Value="False">
                                 <Setter Property="BackgroundColor" Value="#222222"/>
                                 <Setter Property="TextColor" Value="White"/>
                             </DataTrigger>
@@ -236,7 +258,26 @@
                                             <Border.StrokeShape>
                                                 <RoundRectangle CornerRadius="12"/>
                                             </Border.StrokeShape>
-                                            <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" TextColor="#FF9800"/>
+                                            <Border.Triggers>
+                                                <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="Completed">
+                                                    <Setter Property="BackgroundColor" Value="#1A3826"/>
+                                                    <Setter Property="Stroke" Value="#4CAF50"/>
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Border" Binding="{Binding Status}" Value="Cancelled">
+                                                    <Setter Property="BackgroundColor" Value="#3D1A1A"/>
+                                                    <Setter Property="Stroke" Value="#F44336"/>
+                                                </DataTrigger>
+                                            </Border.Triggers>
+                                            <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" TextColor="#FF9800">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="TextColor" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Cancelled">
+                                                        <Setter Property="TextColor" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
                                         </Border>
                                     </Grid>
 
@@ -295,24 +336,43 @@
                                             <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
                                         </VerticalStackLayout>
 
-                                        <Button Grid.Column="1"
-                                                Text="Advance Ticket Status ⚡"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=AdvanceStatusCommand}"
-                                                CommandParameter="{Binding .}"
-                                                BackgroundColor="#FF9800"
-                                                TextColor="Black"
-                                                FontAttributes="Bold"
-                                                CornerRadius="16"
-                                                Padding="16,8"
-                                                FontSize="12">
-                                            <Button.Triggers>
-                                                <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Completed">
-                                                    <Setter Property="Text" Value="Completed ✔️"/>
-                                                    <Setter Property="BackgroundColor" Value="#2E7D32"/>
-                                                    <Setter Property="TextColor" Value="White"/>
-                                                </DataTrigger>
-                                            </Button.Triggers>
-                                        </Button>
+                                        <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                            <!-- Cancel Ticket Button (Only visible if order is not completed/cancelled) -->
+                                            <Button Text="Cancel ✕"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=CancelOrderCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    IsVisible="{Binding CanBeCancelled}"
+                                                    BackgroundColor="#2D1B1B"
+                                                    TextColor="#FF6B6B"
+                                                    FontAttributes="Bold"
+                                                    CornerRadius="14"
+                                                    Padding="12,6"
+                                                    FontSize="11"/>
+
+                                            <!-- Advance Ticket Status Button -->
+                                            <Button Text="Advance Status ⚡"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=AdvanceStatusCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="#FF9800"
+                                                    TextColor="Black"
+                                                    FontAttributes="Bold"
+                                                    CornerRadius="14"
+                                                    Padding="14,6"
+                                                    FontSize="11">
+                                                <Button.Triggers>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Text" Value="Completed ✔️"/>
+                                                        <Setter Property="BackgroundColor" Value="#2E7D32"/>
+                                                        <Setter Property="TextColor" Value="White"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Cancelled">
+                                                        <Setter Property="Text" Value="Cancelled ✕"/>
+                                                        <Setter Property="BackgroundColor" Value="#3D2020"/>
+                                                        <Setter Property="TextColor" Value="#FF6B6B"/>
+                                                    </DataTrigger>
+                                                </Button.Triggers>
+                                            </Button>
+                                        </HorizontalStackLayout>
                                     </Grid>
 
                                 </VerticalStackLayout>
@@ -515,6 +575,165 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </Grid>
+
+        <!-- SECTION 3: Sales & Business Analytics (Tab 3) -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsSalesSectionActive}">
+            <VerticalStackLayout Padding="16" Spacing="16">
+
+                <!-- Header Row with Manual Recalculate Button -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Revenue &amp; Performance" FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                        <Label Text="Live operational insights and sales metrics." FontSize="12" TextColor="#AAAAAA"/>
+                    </VerticalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="Recalculate ⚡"
+                            Command="{Binding ComputeSalesMetricsCommand}"
+                            BackgroundColor="#2C2C2C"
+                            TextColor="#FF9800"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            CornerRadius="8"
+                            Padding="12,6"
+                            VerticalOptions="Center"/>
+                </Grid>
+
+                <!-- KPI Metric Cards Grid (2x2) -->
+                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="12" RowSpacing="12">
+                    <!-- Today's Gross Revenue Card -->
+                    <Border Grid.Row="0" Grid.Column="0" BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#2E7D32" Padding="14">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="💵 TODAY'S SALES" FontSize="11" FontAttributes="Bold" TextColor="#4CAF50"/>
+                            <Label Text="{Binding TodayRevenue, StringFormat='${0:F2}'}" FontSize="22" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Completed/Active" FontSize="10" TextColor="#777777"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Monthly Revenue Card -->
+                    <Border Grid.Row="0" Grid.Column="1" BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#FF9800" Padding="14">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="📅 THIS MONTH" FontSize="11" FontAttributes="Bold" TextColor="#FF9800"/>
+                            <Label Text="{Binding MonthRevenue, StringFormat='${0:F2}'}" FontSize="22" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Calendar month gross" FontSize="10" TextColor="#777777"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Completed Orders Count Card -->
+                    <Border Grid.Row="1" Grid.Column="0" BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#2196F3" Padding="14">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="📦 ORDERS FULFILLED" FontSize="11" FontAttributes="Bold" TextColor="#2196F3"/>
+                            <Label Text="{Binding TotalCompletedOrders}" FontSize="22" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Total delivered/ready" FontSize="10" TextColor="#777777"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Average Ticket Size Card -->
+                    <Border Grid.Row="1" Grid.Column="1" BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#9C27B0" Padding="14">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="🧾 AVG TICKET" FontSize="11" FontAttributes="Bold" TextColor="#BA68C8"/>
+                            <Label Text="{Binding AverageTicketValue, StringFormat='${0:F2}'}" FontSize="22" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Per order average" FontSize="10" TextColor="#777777"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Order Channel Breakdown Card -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Fulfillment Channels" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                            <!-- Pickup Box -->
+                            <Border Grid.Column="0" BackgroundColor="#242424" StrokeThickness="1" Stroke="#444444" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8"/>
+                                </Border.StrokeShape>
+                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                    <Label Text="🚶" FontSize="24" VerticalOptions="Center"/>
+                                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                        <Label Text="Campus Pickup" FontSize="11" TextColor="#AAAAAA"/>
+                                        <Label Text="{Binding PickupOrderCount, StringFormat='{0} orders'}" FontSize="15" FontAttributes="Bold" TextColor="White"/>
+                                    </VerticalStackLayout>
+                                </HorizontalStackLayout>
+                            </Border>
+
+                            <!-- Delivery Box -->
+                            <Border Grid.Column="1" BackgroundColor="#242424" StrokeThickness="1" Stroke="#444444" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8"/>
+                                </Border.StrokeShape>
+                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                    <Label Text="🛵" FontSize="24" VerticalOptions="Center"/>
+                                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                        <Label Text="Dorm Delivery" FontSize="11" TextColor="#AAAAAA"/>
+                                        <Label Text="{Binding DeliveryOrderCount, StringFormat='{0} orders'}" FontSize="15" FontAttributes="Bold" TextColor="White"/>
+                                    </VerticalStackLayout>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Top Selling Items Leaderboard -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Grid.Column="0" Text="Top 5 Best Sellers 🏆" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                            <Label Grid.Column="1" Text="By Units Sold" FontSize="11" TextColor="#FF9800"/>
+                        </Grid>
+
+                        <!-- Fallback Empty State when no orders -->
+                        <VerticalStackLayout Spacing="6" Padding="12" HorizontalOptions="Center" IsVisible="{Binding HasNoSalesData}">
+                            <Label Text="📊" FontSize="32" HorizontalOptions="Center"/>
+                            <Label Text="No sales recorded yet." FontSize="12" TextColor="#888888" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+
+                        <!-- Leaderboard Items List -->
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopSellingItems}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="dto:TopSellingItemDto">
+                                    <Border BackgroundColor="#252525" StrokeThickness="0" Padding="12,10">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8"/>
+                                        </Border.StrokeShape>
+                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                                <Label Text="{Binding Name}" FontSize="13" FontAttributes="Bold" TextColor="White"/>
+                                                <Label Text="{Binding QuantitySold, StringFormat='{0} units sold'}" FontSize="11" TextColor="#FF9800"/>
+                                            </VerticalStackLayout>
+
+                                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center">
+                                                <Label Text="{Binding TotalRevenue, StringFormat='${0:F2}'}" FontSize="14" FontAttributes="Bold" TextColor="#4CAF50" HorizontalOptions="End"/>
+                                                <Label Text="revenue" FontSize="9" TextColor="#777777" HorizontalOptions="End"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
 
     </Grid>
 
