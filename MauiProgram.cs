@@ -112,6 +112,24 @@ public static class MauiProgram
             {
                 // Column already exists or table was just created
             }
+
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS Expenses (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        CafeId INTEGER NOT NULL,
+                        Title TEXT NOT NULL,
+                        Category TEXT NOT NULL,
+                        Amount TEXT NOT NULL,
+                        ExpenseDate TEXT NOT NULL,
+                        FOREIGN KEY (CafeId) REFERENCES Cafes (Id) ON DELETE CASCADE
+                    );");
+            }
+            catch
+            {
+                // Table already created
+            }
         }
 
         return app;

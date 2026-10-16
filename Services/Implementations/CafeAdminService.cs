@@ -114,4 +114,31 @@ public class CafeAdminService : ICafeAdminService
         await _dbContext.SaveChangesAsync();
         return true;
     }
+
+    public async Task<List<Expense>> GetCafeExpensesAsync(int cafeId)
+    {
+        return await _dbContext.Expenses
+            .Where(e => e.CafeId == cafeId)
+            .OrderByDescending(e => e.ExpenseDate)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<bool> AddExpenseAsync(Expense expense)
+    {
+        if (expense == null) return false;
+        await _dbContext.Expenses.AddAsync(expense);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteExpenseAsync(int expenseId)
+    {
+        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == expenseId);
+        if (expense == null) return false;
+
+        _dbContext.Expenses.Remove(expense);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }

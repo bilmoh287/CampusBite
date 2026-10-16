@@ -48,6 +48,26 @@ public partial class CafeAdminViewModel : ObservableObject
     public bool HasNoSalesData => !HasSalesData;
 
     [ObservableProperty]
+    private decimal _monthExpenses;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsProfitable))]
+    private decimal _netProfit;
+
+    [ObservableProperty]
+    private decimal _profitMarginPercent;
+
+    [ObservableProperty]
+    private ObservableCollection<Expense> _cafeExpenses = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoExpenses))]
+    private bool _hasExpenses;
+
+    public bool HasNoExpenses => !HasExpenses;
+    public bool IsProfitable => NetProfit >= 0;
+
+    [ObservableProperty]
     private ObservableCollection<Product> _cafeProducts = new();
 
     [ObservableProperty]
@@ -295,6 +315,134 @@ public partial class CafeAdminViewModel : ObservableObject
 
         TopSellingItems = new ObservableCollection<TopSellingItemDto>(topItems);
         HasSalesData = validOrders.Any();
+
+        // Load & Compute Operating Expenses
+        var expenses = await _adminService.GetCafeExpensesAsync(SelectedCafe.Id);
+        CafeExpenses = new ObservableCollection<Expense>(expenses);
+        HasExpenses = expenses.Any();
+
+        MonthExpenses = expenses
+            .Where(e => e.ExpenseDate.Year == thisYear && e.ExpenseDate.Month == thisMonth)
+            .Sum(e => e.Amount);
+
+        NetProfit = MonthRevenue - MonthExpenses;
+        ProfitMarginPercent = MonthRevenue > 0
+            ? Math.Round((NetProfit / MonthRevenue) * 100, 1)
+            : 0;
+    }
+
+    [RelayCommand]
+    public async Task LogExpenseAsync()
+    {
+        if (SelectedCafe == null) return;
+
+        string title = await Shell.Current.DisplayPromptAsync(
+            "New Café Expense 📝",
+            "Enter expense description (e.g. 10L Milk, Coffee Beans, Cups):",
+            placeholder: "Item description",
+            maxLength: 50,
+            accept: "Next",
+            cancel: "Cancel");
+
+        if (string.IsNullOrWhiteSpace(title)) return;
+
+        string amountStr = await Shell.Current.DisplayPromptAsync(
+            "Expense Cost 💵",
+            $"Enter amount spent for '{title}':",
+            placeholder: "e.g. 25.00",
+            maxLength: 8,
+            keyboard: Keyboard.Numeric,
+            accept: "Next",
+            cancel: "Cancel");
+
+        if (string.IsNullOrWhiteSpace(amountStr)) return;
+
+        if (!decimal.TryParse(amountStr, System.Globalization.NumberStyles.Currency | System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out decimal amount) &&
+            !decimal.TryParse(amountStr, out amount))
+        {
+            await Shell.Current.DisplayAlertAsync("Invalid Amount", "Please enter a valid numeric cost.", "OK");
+            return;
+        }
+
+        if (amount <= 0)
+        {
+            await Shell.Current.DisplayAlertAsync("Invalid Amount", "Expense amount must be greater than $0.00.", "OK");
+            return;
+        }
+
+        string category = await Shell.Current.DisplayActionSheet(
+            "Select Expense Category 🏷️",
+            "Cancel",
+            null,
+            "Ingredients", "Supplies", "Utilities", "Other");
+
+        if (string.IsNullOrWhiteSpace(category) || category == "Cancel")
+        {
+            category = "Ingredients";
+        }
+
+        var expense = new Expense
+        {
+            CafeId = SelectedCafe.Id,
+            Title = title.Trim(),
+            Category = category,
+            Amount = amount,
+            ExpenseDate = DateTime.Now
+        };
+
+        bool saved = await _adminService.AddExpenseAsync(expense);
+        if (saved)
+        {
+            CafeExpenses.Insert(0, expense);
+            HasExpenses = true;
+
+            var today = DateTime.Today;
+            MonthExpenses = CafeExpenses
+                .Where(e => e.ExpenseDate.Year == today.Year && e.ExpenseDate.Month == today.Month)
+                .Sum(e => e.Amount);
+
+            NetProfit = MonthRevenue - MonthExpenses;
+            ProfitMarginPercent = MonthRevenue > 0
+                ? Math.Round((NetProfit / MonthRevenue) * 100, 1)
+                : 0;
+
+            await Shell.Current.DisplayAlertAsync("Expense Saved 💵", $"Logged ${amount:F2} for '{title}'.", "OK");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlertAsync("Error", "Failed to save expense in database.", "OK");
+        }
+    }
+
+    [RelayCommand]
+    public async Task DeleteExpenseAsync(Expense expense)
+    {
+        if (expense == null) return;
+
+        bool confirm = await Shell.Current.DisplayAlertAsync(
+            "Delete Expense 🗑️",
+            $"Remove expense '{expense.Title}' (${expense.Amount:F2})?",
+            "Delete",
+            "Cancel");
+
+        if (!confirm) return;
+
+        bool deleted = await _adminService.DeleteExpenseAsync(expense.Id);
+        if (deleted)
+        {
+            CafeExpenses.Remove(expense);
+            HasExpenses = CafeExpenses.Any();
+
+            var today = DateTime.Today;
+            MonthExpenses = CafeExpenses
+                .Where(e => e.ExpenseDate.Year == today.Year && e.ExpenseDate.Month == today.Month)
+                .Sum(e => e.Amount);
+
+            NetProfit = MonthRevenue - MonthExpenses;
+            ProfitMarginPercent = MonthRevenue > 0
+                ? Math.Round((NetProfit / MonthRevenue) * 100, 1)
+                : 0;
+        }
     }
 
     [RelayCommand]

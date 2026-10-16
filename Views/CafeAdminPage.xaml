@@ -649,6 +649,128 @@
                     </Border>
                 </Grid>
 
+                <!-- Net Profit & Bottom Line Card -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#444444" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Grid.Column="0" Text="Monthly Profit &amp; Loss" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                            <Border Grid.Column="1" StrokeThickness="0" Padding="8,3" BackgroundColor="#2A2A2A">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="6"/></Border.StrokeShape>
+                                <Label Text="{Binding ProfitMarginPercent, StringFormat='{0:F1}% Margin'}" FontSize="11" FontAttributes="Bold" TextColor="#FF9800"/>
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
+                            <!-- Gross Sales -->
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="Gross Revenue" FontSize="10" TextColor="#AAAAAA"/>
+                                <Label Text="{Binding MonthRevenue, StringFormat='${0:F2}'}" FontSize="15" FontAttributes="Bold" TextColor="White"/>
+                            </VerticalStackLayout>
+
+                            <!-- Total Expenses -->
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Expenses" FontSize="10" TextColor="#AAAAAA"/>
+                                <Label Text="{Binding MonthExpenses, StringFormat='-${0:F2}'}" FontSize="15" FontAttributes="Bold" TextColor="#FF6B6B"/>
+                            </VerticalStackLayout>
+
+                            <!-- Net Profit -->
+                            <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                <Label Text="Net Profit" FontSize="10" TextColor="#AAAAAA"/>
+                                <Label Text="{Binding NetProfit, StringFormat='${0:F2}'}" FontSize="16" FontAttributes="Bold">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsProfitable}" Value="True">
+                                            <Setter Property="TextColor" Value="#4CAF50"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsProfitable}" Value="False">
+                                            <Setter Property="TextColor" Value="#FF5252"/>
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Operating Expenses Tracker Card -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="Operating Expenses 🧾" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                                <Label Text="Track ingredients, packaging, and supply costs." FontSize="11" TextColor="#888888"/>
+                            </VerticalStackLayout>
+                            <Button Grid.Column="1"
+                                    Text="+ Log Expense"
+                                    Command="{Binding LogExpenseCommand}"
+                                    BackgroundColor="#FF9800"
+                                    TextColor="Black"
+                                    FontAttributes="Bold"
+                                    FontSize="11"
+                                    CornerRadius="8"
+                                    Padding="10,6"
+                                    HeightRequest="36"
+                                    VerticalOptions="Center"/>
+                        </Grid>
+
+                        <!-- Fallback Empty State when no expenses -->
+                        <VerticalStackLayout Spacing="6" Padding="12" HorizontalOptions="Center" IsVisible="{Binding HasNoExpenses}">
+                            <Label Text="📦" FontSize="32" HorizontalOptions="Center"/>
+                            <Label Text="No expenses logged yet for this café." FontSize="12" TextColor="#888888" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+
+                        <!-- Expenses List -->
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CafeExpenses}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:Expense">
+                                    <Border BackgroundColor="#242424" StrokeThickness="0" Padding="12,8">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8"/>
+                                        </Border.StrokeShape>
+                                        <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="10">
+                                            <!-- Title & Category -->
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                                <Label Text="{Binding Title}" FontSize="13" FontAttributes="Bold" TextColor="White"/>
+                                                <HorizontalStackLayout Spacing="6">
+                                                    <Label Text="{Binding Category}" FontSize="10" TextColor="#FF9800"/>
+                                                    <Label Text="•" FontSize="10" TextColor="#666666"/>
+                                                    <Label Text="{Binding ExpenseDate, StringFormat='{0:M/d}'}" FontSize="10" TextColor="#888888"/>
+                                                </HorizontalStackLayout>
+                                            </VerticalStackLayout>
+
+                                            <!-- Amount -->
+                                            <Label Grid.Column="1"
+                                                   Text="{Binding Amount, StringFormat='-${0:F2}'}"
+                                                   FontSize="13"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#FF6B6B"
+                                                   VerticalOptions="Center"/>
+
+                                            <!-- Delete Button -->
+                                            <Button Grid.Column="2"
+                                                    Text="✕"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=DeleteExpenseCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#777777"
+                                                    FontSize="12"
+                                                    Padding="6,2"
+                                                    HeightRequest="30"
+                                                    WidthRequest="30"
+                                                    VerticalOptions="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Order Channel Breakdown Card -->
                 <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="16">
                     <Border.StrokeShape>

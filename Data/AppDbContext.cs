@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<Expense> Expenses => Set<Expense>();
 
     public AppDbContext()
     {
@@ -44,6 +45,10 @@ public class AppDbContext : DbContext
             .Property(oi => oi.UnitPrice)
             .HasColumnType("decimal(18,2)");
 
+        modelBuilder.Entity<Expense>()
+            .Property(e => e.Amount)
+            .HasColumnType("decimal(18,2)");
+
         // Configure Relationships
         modelBuilder.Entity<Cafe>()
             .HasMany(c => c.Products)
@@ -55,6 +60,12 @@ public class AppDbContext : DbContext
             .HasMany(c => c.Orders)
             .WithOne(o => o.Cafe)
             .HasForeignKey(o => o.CafeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Cafe>()
+            .HasMany<Expense>()
+            .WithOne(e => e.Cafe)
+            .HasForeignKey(e => e.CafeId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Order>()
@@ -173,6 +184,36 @@ public class AppDbContext : DbContext
                 Category = "Combos",
                 IsAvailable = false,
                 ImageUrl = "dotnet_bot.png"
+            }
+        );
+
+        modelBuilder.Entity<Expense>().HasData(
+            new Expense
+            {
+                Id = 1,
+                CafeId = 1,
+                Title = "Organic Whole Milk (12 Cartons)",
+                Category = "Ingredients",
+                Amount = 28.50m,
+                ExpenseDate = new DateTime(2026, 10, 10, 9, 0, 0)
+            },
+            new Expense
+            {
+                Id = 2,
+                CafeId = 1,
+                Title = "Ethiopian Espresso Beans (5kg)",
+                Category = "Ingredients",
+                Amount = 45.00m,
+                ExpenseDate = new DateTime(2026, 10, 12, 10, 30, 0)
+            },
+            new Expense
+            {
+                Id = 3,
+                CafeId = 1,
+                Title = "Eco-Friendly Cups & Lids (Case)",
+                Category = "Supplies",
+                Amount = 18.00m,
+                ExpenseDate = new DateTime(2026, 10, 14, 14, 0, 0)
             }
         );
     }
