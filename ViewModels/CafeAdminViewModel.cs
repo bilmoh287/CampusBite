@@ -498,6 +498,127 @@ public partial class CafeAdminViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task AddProductAsync()
+    {
+        if (SelectedCafe == null) return;
+
+        // Step 1: Item Name
+        string name = await Shell.Current.DisplayPromptAsync(
+            "New Menu Item 🍔",
+            "Enter dish or drink name:",
+            placeholder: "e.g. Vanilla Iced Latte",
+            maxLength: 50,
+            accept: "Next",
+            cancel: "Cancel");
+
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        // Step 2: Category
+        string category = await Shell.Current.DisplayActionSheet(
+            "Select Menu Category 🏷️",
+            "Cancel",
+            null,
+            "Beverages", "Meals", "Pastries", "Snacks", "Combos", "Desserts");
+
+        if (string.IsNullOrWhiteSpace(category) || category == "Cancel")
+        {
+            category = "Beverages";
+        }
+
+        // Step 3: Price
+        string priceStr = await Shell.Current.DisplayPromptAsync(
+            "Item Price 🏷️",
+            $"Enter price for '{name}':",
+            placeholder: "e.g. 4.50",
+            maxLength: 8,
+            keyboard: Keyboard.Numeric,
+            accept: "Next",
+            cancel: "Cancel");
+
+        if (string.IsNullOrWhiteSpace(priceStr)) return;
+
+        if (!decimal.TryParse(priceStr, System.Globalization.NumberStyles.Currency | System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out decimal price) &&
+            !decimal.TryParse(priceStr, out price))
+        {
+            await Shell.Current.DisplayAlertAsync("Invalid Price", "Please enter a valid numeric price.", "OK");
+            return;
+        }
+
+        if (price <= 0)
+        {
+            await Shell.Current.DisplayAlertAsync("Invalid Price", "Price must be greater than $0.00.", "OK");
+            return;
+        }
+
+        // Step 4: Optional Initial Stock Count
+        string stockStr = await Shell.Current.DisplayPromptAsync(
+            "Initial Stock (Optional) 📦",
+            "Enter initial quantity available:\n(Leave empty for untracked simple in-stock mode)",
+            placeholder: "e.g. 25 (or leave empty)",
+            maxLength: 5,
+            keyboard: Keyboard.Numeric,
+            accept: "Create",
+            cancel: "Skip / Untracked");
+
+        int? stockQty = null;
+        if (!string.IsNullOrWhiteSpace(stockStr) && int.TryParse(stockStr, out int parsedStock) && parsedStock >= 0)
+        {
+            stockQty = parsedStock;
+        }
+
+        var newProduct = new Product
+        {
+            CafeId = SelectedCafe.Id,
+            Name = name.Trim(),
+            Category = category,
+            Price = price,
+            Description = $"Freshly prepared {name.Trim()} from {SelectedCafe.Name}.",
+            IsAvailable = true,
+            StockQuantity = stockQty,
+            LowStockThreshold = 5,
+            ImageUrl = "dotnet_bot.png"
+        };
+
+        bool created = await _adminService.AddProductAsync(newProduct);
+        if (created)
+        {
+            CafeProducts.Insert(0, newProduct);
+            IsStockEmpty = false;
+            await Shell.Current.DisplayAlertAsync("Item Created 🎉", $"'{newProduct.Name}' has been added to your café menu!", "OK");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlertAsync("Error", "Failed to add menu item to database.", "OK");
+        }
+    }
+
+    [RelayCommand]
+    public async Task DeleteProductAsync(Product product)
+    {
+        if (product == null) return;
+
+        bool confirm = await Shell.Current.DisplayAlertAsync(
+            "Delete Menu Item 🗑️",
+            $"Are you sure you want to permanently remove '{product.Name}' (${product.Price:F2}) from your menu?",
+            "Yes, Delete",
+            "Cancel");
+
+        if (!confirm) return;
+
+        bool deleted = await _adminService.DeleteProductAsync(product.Id);
+        if (deleted)
+        {
+            CafeProducts.Remove(product);
+            IsStockEmpty = CafeProducts.Count == 0;
+            await Shell.Current.DisplayAlertAsync("Item Removed 🗑️", $"'{product.Name}' was removed from the menu.", "OK");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlertAsync("Error", "Failed to delete item from database.", "OK");
+        }
+    }
+
+    [RelayCommand]
     public async Task ToggleProductAvailabilityAsync(Product product)
     {
         if (product == null) return;

@@ -141,4 +141,22 @@ public class CafeAdminService : ICafeAdminService
         await _dbContext.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> AddProductAsync(Product product)
+    {
+        if (product == null) return false;
+        await _dbContext.Products.AddAsync(product);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteProductAsync(int productId)
+    {
+        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+        if (product == null) return false;
+
+        _dbContext.Products.Remove(product);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }

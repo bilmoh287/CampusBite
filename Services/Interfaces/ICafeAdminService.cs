@@ -14,4 +14,6 @@ public interface ICafeAdminService
     Task<List<Expense>> GetCafeExpensesAsync(int cafeId);
     Task<bool> AddExpenseAsync(Expense expense);
     Task<bool> DeleteExpenseAsync(int expenseId);
+    Task<bool> AddProductAsync(Product product);
+    Task<bool> DeleteProductAsync(int productId);
 }
