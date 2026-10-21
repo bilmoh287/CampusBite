@@ -380,6 +380,47 @@ namespace CampusBite.Api.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("CampusBite.Api.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReplacedByToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.StudentContract", b =>
                 {
                     b.Property<int>("Id")
@@ -640,6 +681,17 @@ namespace CampusBite.Api.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("CampusBite.Api.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("CampusBite.Api.Domain.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.StudentContract", b =>
                 {
                     b.HasOne("CampusBite.Api.Domain.Entities.ContractPlan", "ContractPlan")
@@ -723,6 +775,8 @@ namespace CampusBite.Api.Migrations
                     b.Navigation("CustomerOrders");
 
                     b.Navigation("OwnedCafes");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("StudentContracts");
                 });

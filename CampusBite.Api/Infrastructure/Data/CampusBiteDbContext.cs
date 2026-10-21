@@ -21,6 +21,7 @@ public class CampusBiteDbContext : DbContext
     public DbSet<StudentContract> StudentContracts => Set<StudentContract>();
     public DbSet<ContractUsageLog> ContractUsageLogs => Set<ContractUsageLog>();
     public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -233,6 +234,21 @@ public class CampusBiteDbContext : DbContext
             entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Category).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.Amount).HasPrecision(10, 2);
+        });
+
+        // ====================================================================
+        // 12. REFRESH TOKEN CONFIGURATION
+        // ====================================================================
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(rt => rt.Id);
+            entity.HasIndex(rt => rt.Token).IsUnique();
+            entity.Property(rt => rt.Token).IsRequired().HasMaxLength(255);
+
+            entity.HasOne(rt => rt.User)
+                  .WithMany(u => u.RefreshTokens)
+                  .HasForeignKey(rt => rt.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

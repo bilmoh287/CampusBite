@@ -19,4 +19,5 @@ public class User
     public ICollection<Order> CustomerOrders { get; set; } = new List<Order>();
     public ICollection<Order> CourierOrders { get; set; } = new List<Order>();
     public ICollection<StudentContract> StudentContracts { get; set; } = new List<StudentContract>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }
