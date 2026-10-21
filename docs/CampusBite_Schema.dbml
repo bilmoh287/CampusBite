@@ -1,0 +1,278 @@
+// ============================================================================
+// CampusBite - Enterprise Campus Food & Meal Subscription Platform
+// Visual Schema Definition in DBML (https://dbdiagram.io)
+// ============================================================================
+
+Project CampusBite {
+  database_type: 'SQL Server'
+  Note: '''
+    # CampusBite Database Schema
+    Multi-vendor campus food ordering, courier fulfillment, 
+    meal plan subscriptions, and cafe expense tracking.
+  '''
+}
+
+// ============================================================================
+// ENUMS (Lookup & State Machines)
+// ============================================================================
+
+Enum UserRole {
+  Student
+  CafeOwner
+  Courier
+  Admin
+  Customer
+}
+
+Enum OrderStatus {
+  Pending
+  Confirmed
+  Preparing
+  ReadyForPickup
+  OutForDelivery
+  Delivered
+  Cancelled
+}
+
+Enum PaymentMethod {
+  Cash
+  Card
+  MealContract
+}
+
+Enum ContractStatus {
+  Active
+  Depleted
+  Expired
+  Suspended
+}
+
+Enum ExpenseCategory {
+  Inventory
+  Utilities
+  Salaries
+  Rent
+  Maintenance
+  Other
+}
+
+// ============================================================================
+// TABLES
+// ============================================================================
+
+Table universities {
+  id int [pk, increment]
+  name varchar(100) [not null, note: 'e.g. Addis Ababa University']
+  campus_name varchar(100) [note: 'e.g. 4 Kilo, 6 Kilo, Main Campus']
+  city varchar(100) [not null]
+  is_active boolean [not null, default: true]
+
+  Note: 'Campus locations to filter cafes for students'
+}
+
+Table users {
+  id int [pk, increment]
+  university_id int [note: 'Nullable: Students pick uni; Bajaj drivers & locals leave null']
+  full_name varchar(100) [not null]
+  email varchar(150) [unique, not null]
+  password_hash varchar(255) [not null]
+  role UserRole [not null, default: 'Student']
+  phone_number varchar(20)
+  created_at datetime [default: `now()`]
+
+  Note: 'Students, couriers, cafe owners, and general local customers'
+}
+
+Table cafes {
+  id int [pk, increment]
+  university_id int [note: 'Nullable: Campus cafes link to uni; standalone cafes leave null']
+  owner_id int [not null, note: 'Manager/owner user account']
+  name varchar(100) [not null]
+  description text
+  location varchar(150) [not null, note: 'Building / Campus zone or Street address']
+  logo_url varchar(255)
+  delivery_fee decimal(10,2) [not null, default: 0.00]
+  minimum_order_amount decimal(10,2) [not null, default: 0.00]
+  is_active boolean [not null, default: true]
+  created_at datetime [default: `now()`]
+
+  Note: 'Campus vendors / food kiosks / local restaurants'
+}
+
+Table categories {
+  id int [pk, increment]
+  cafe_id int [not null]
+  name varchar(50) [not null]
+  display_order int [not null, default: 0]
+
+  Note: 'Menu organization per cafe (e.g., Hot Drinks, Bowls, Sandwiches)'
+}
+
+Table products {
+  id int [pk, increment]
+  cafe_id int [not null]
+  category_id int [not null]
+  name varchar(100) [not null]
+  description text
+  price decimal(10,2) [not null]
+  image_url varchar(255)
+  stock_quantity int [note: 'null = unlimited / not tracked']
+  is_available boolean [not null, default: true]
+  created_at datetime [default: `now()`]
+
+  Note: 'Food and drink menu items with nullable stock tracking'
+}
+
+Table orders {
+  id int [pk, increment]
+  order_number varchar(20) [unique, not null, note: 'Human-readable ticket e.g. ORD-2026-001']
+  customer_id int [not null]
+  cafe_id int [not null]
+  courier_id int [note: 'Nullable: assigned when accepted by runner']
+  status OrderStatus [not null, default: 'Pending']
+  payment_method PaymentMethod [not null]
+  subtotal decimal(10,2) [not null]
+  delivery_fee decimal(10,2) [not null, default: 0.00]
+  discount_amount decimal(10,2) [not null, default: 0.00]
+  total_amount decimal(10,2) [not null]
+  delivery_location varchar(200) [not null, note: 'e.g. Library 2nd Floor, Room 204']
+  special_notes text
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  Note: 'Order tickets and delivery lifecycle'
+}
+
+Table order_items {
+  id int [pk, increment]
+  order_id int [not null]
+  product_id int [note: 'Nullable if original product is deleted']
+  product_name varchar(100) [not null, note: 'Historical snapshot: frozen at checkout']
+  unit_price decimal(10,2) [not null, note: 'Historical snapshot: frozen at checkout']
+  quantity int [not null, default: 1]
+  item_total decimal(10,2) [not null]
+
+  Note: 'Line items with historical price/name freezing'
+}
+
+Table contract_plans {
+  id int [pk, increment]
+  cafe_id int [not null]
+  name varchar(100) [not null, note: 'e.g., Monthly 30 Meals Plan']
+  description text
+  price decimal(10,2) [not null]
+  total_credits int [not null, note: 'Number of eligible meal credits']
+  validity_days int [not null, default: 30]
+  is_active boolean [not null, default: true]
+  created_at datetime [default: `now()`]
+
+  Note: 'Pre-paid subscription templates offered by cafes'
+}
+
+Table student_contracts {
+  id int [pk, increment]
+  student_id int [not null]
+  contract_plan_id int [not null]
+  total_credits int [not null]
+  remaining_credits int [not null]
+  allow_overdraft boolean [not null, default: false, note: 'Allows familiar customers to eat on credit']
+  overdraft_limit int [not null, default: 0, note: 'Max negative meals allowed before settlement']
+  status ContractStatus [not null, default: 'Active']
+  start_date datetime [not null]
+  end_date datetime [not null]
+  created_at datetime [default: `now()`]
+
+  Note: 'Purchased meal contracts active for a student'
+}
+
+Table contract_usage_logs {
+  id int [pk, increment]
+  student_contract_id int [not null]
+  order_id int [not null]
+  credits_deducted int [not null, default: 1]
+  remaining_credits_after int [not null]
+  used_at datetime [default: `now()`]
+
+  Note: 'Audit ledger linking meal plan deductions to orders (prevents disputes)'
+}
+
+Table expenses {
+  id int [pk, increment]
+  cafe_id int [not null]
+  title varchar(100) [not null]
+  category ExpenseCategory [not null]
+  amount decimal(10,2) [not null]
+  expense_date date [not null]
+  notes text
+  created_at datetime [default: `now()`]
+
+  Note: 'Operating expenses for Cafe P&L, sales analytics, and profit margins'
+}
+
+// ============================================================================
+// RELATIONSHIPS (FOREIGN KEYS)
+// ============================================================================
+
+// University links (Nullable)
+Ref: users.university_id > universities.id [delete: set null]
+Ref: cafes.university_id > universities.id [delete: set null]
+
+// Identity & Vendor
+Ref: cafes.owner_id > users.id
+
+// Catalog Hierarchy
+Ref: categories.cafe_id > cafes.id [delete: cascade]
+Ref: products.cafe_id > cafes.id
+Ref: products.category_id > categories.id
+
+// Orders & Delivery Fulfillment
+Ref: orders.customer_id > users.id
+Ref: orders.cafe_id > cafes.id
+Ref: orders.courier_id > users.id
+Ref: order_items.order_id > orders.id [delete: cascade]
+Ref: order_items.product_id > products.id [delete: set null]
+
+// Student Contract Subscriptions
+Ref: contract_plans.cafe_id > cafes.id [delete: cascade]
+Ref: student_contracts.student_id > users.id
+Ref: student_contracts.contract_plan_id > contract_plans.id
+
+// Contract Usage Audit Ledger
+Ref: contract_usage_logs.student_contract_id > student_contracts.id [delete: cascade]
+Ref: contract_usage_logs.order_id > orders.id
+
+// Financial Operations
+Ref: expenses.cafe_id > cafes.id [delete: cascade]
+
+// ============================================================================
+// LOGICAL TABLE GROUPS
+// ============================================================================
+
+TableGroup University_and_Location {
+  universities
+}
+
+TableGroup Identity {
+  users
+}
+
+TableGroup Vendor_and_Catalog {
+  cafes
+  categories
+  products
+}
+
+TableGroup Fulfillment_and_Orders {
+  orders
+  order_items
+}
+
+TableGroup Student_Meal_Contracts {
+  contract_plans
+  student_contracts
+  contract_usage_logs
+}
+
+TableGroup Business_and_Financials {
+  expenses
+}

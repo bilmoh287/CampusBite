@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="CampusBite.csproj" />
+  <Project Path="CampusBite.Client/CampusBite.csproj" />
+  <Project Path="CampusBite.Shared/CampusBite.Shared.csproj" />
+  <Project Path="CampusBite.Api/CampusBite.Api.csproj" />
 </Solution>
