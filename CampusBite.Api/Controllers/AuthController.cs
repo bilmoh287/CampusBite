@@ -4,9 +4,11 @@ using CampusBite.Shared.Requests;
 using CampusBite.Shared.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace CampusBite.Api.Controllers;
 
+[EnableRateLimiting("AuthLimiter")]
 public class AuthController : BaseApiController
 {
     private readonly IAuthService _authService;

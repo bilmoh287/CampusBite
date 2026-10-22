@@ -1,12 +1,17 @@
+using CampusBite.Api.Authorization.Handlers;
+using CampusBite.Api.Authorization.Requirements;
 using CampusBite.Api.Infrastructure.Data;
 using CampusBite.Api.Middlewares;
 using CampusBite.Api.Services.Implementations;
 using CampusBite.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +22,9 @@ builder.Services.AddDbContext<CampusBiteDbContext>(options =>
 // 2. Application Services
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICafeService, CafeService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // 3. JWT Authentication (Layer 2)
 var jwtSecret = builder.Configuration["JwtSettings:Secret"] 
@@ -45,10 +53,44 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 4. Authorization (Layer 3)
-builder.Services.AddAuthorization();
+// 4. Policy-Based Authorization & Handlers (Layers 3 & 4)
+builder.Services.AddScoped<IAuthorizationHandler, CafeOwnerOrAdminHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, OrderOwnerOrAdminHandler>();
 
-// 5. CORS (Layer 1)
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CafeOwnerOrAdmin", policy =>
+        policy.Requirements.Add(new CafeOwnerOrAdminRequirement()));
+
+    options.AddPolicy("OrderOwnerOrAdmin", policy =>
+        policy.Requirements.Add(new OrderOwnerOrAdminRequirement()));
+});
+
+// 5. Rate Limiting (Layer 6 - Abuse & Attack Protection)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Strict Limiter for Auth endpoints (stops credential-stuffing and brute force)
+    options.AddFixedWindowLimiter("AuthLimiter", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+
+    // General Limiter for public API endpoints (stops scraping and DDoS)
+    options.AddFixedWindowLimiter("ApiLimiter", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 5;
+    });
+});
+
+// 6. CORS (Layer 1)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -59,14 +101,15 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 6. Controllers & JSON Options
+// 7. Controllers & JSON Options
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// 7. Swagger Documentation with JWT Bearer
+// 8. Swagger Documentation with JWT Bearer
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -105,10 +148,10 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// 8. Global Exception Handling Middleware
+// 9. Global Exception Handling Middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
-// 9. Database Migration & Seeding on Startup
+// 10. Database Migration & Seeding on Startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -124,7 +167,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 10. HTTP Pipeline Configuration
+// 11. HTTP Pipeline Configuration
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -136,6 +179,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+app.UseRateLimiter(); // Enforce Rate Limiting before Auth/Controllers
 
 app.UseAuthentication();
 app.UseAuthorization();
