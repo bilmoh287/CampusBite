@@ -35,7 +35,8 @@ public static class MauiProgram
         // Register Database Context with Transient lifetime for thread safety in MAUI
         builder.Services.AddDbContext<AppDbContext>(ServiceLifetime.Transient, ServiceLifetime.Transient);
 
-        // Register Services (Transient to ensure fresh DbContext instances per operation)
+        // Register Services
+        builder.Services.AddTransient<IAuthService, AuthService>();
         builder.Services.AddTransient<ICafeService, CafeService>();
         builder.Services.AddTransient<IProductService, ProductService>();
         builder.Services.AddTransient<IOrderService, OrderService>();

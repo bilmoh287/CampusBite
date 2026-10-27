@@ -1,14 +1,20 @@
-using Microsoft.EntityFrameworkCore;
+using CampusBite.Models;
+using CampusBite.Models.UI;
+using CampusBite.Services.Interfaces;
+using CampusBite.Services.Network;
+using CampusBite.Shared.DTOs;
+using CampusBite.Shared.Enums;
+using CampusBite.Shared.Requests;
 
 namespace CampusBite.Services.Implementations;
 
 public class OrderService : IOrderService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IApiClient _apiClient;
 
-    public OrderService(AppDbContext dbContext)
+    public OrderService(IApiClient apiClient)
     {
-        _dbContext = dbContext;
+        _apiClient = apiClient;
     }
 
     public async Task<Order> CreateOrderAsync(int cafeId, string orderType, string? deliveryLocation, string? notes, IEnumerable<CartItem> cartItems)
@@ -19,65 +25,96 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("Cannot create an order from an empty cart.");
         }
 
-        decimal subtotal = itemsList.Sum(i => i.TotalPrice);
-        decimal deliveryFee = string.Equals(orderType, "Delivery", StringComparison.OrdinalIgnoreCase) ? 2.50m : 0.00m;
-        decimal totalAmount = subtotal + deliveryFee;
+        var location = !string.IsNullOrWhiteSpace(deliveryLocation) 
+            ? deliveryLocation.Trim() 
+            : (string.Equals(orderType, "Delivery", StringComparison.OrdinalIgnoreCase) ? "Campus Dorm" : "Pickup Counter");
 
-        var order = new Order
+        var request = new CreateOrderRequest
         {
             CafeId = cafeId,
-            OrderDate = DateTime.Now,
-            TotalAmount = totalAmount,
-            Status = "Pending",
-            OrderType = orderType,
-            DeliveryLocation = string.IsNullOrWhiteSpace(deliveryLocation) ? null : deliveryLocation.Trim(),
-            Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
+            DeliveryLocation = location,
+            PaymentMethod = PaymentMethod.Cash,
+            SpecialNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
+            Items = itemsList.Select(c => new CreateOrderItemRequest
+            {
+                ProductId = c.Product.Id,
+                Quantity = c.Quantity
+            }).ToList()
         };
 
-        foreach (var cartItem in itemsList)
-        {
-            order.OrderItems.Add(new OrderItem
-            {
-                ProductId = cartItem.Product.Id,
-                Quantity = cartItem.Quantity,
-                UnitPrice = cartItem.Product.Price
-            });
+        var response = await _apiClient.PostAsync<CreateOrderRequest, OrderDto>(ApiConstants.Orders, request);
 
-            // Automatically decrement stock if the café is tracking inventory for this item
-            var dbProduct = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == cartItem.Product.Id);
-            if (dbProduct != null && dbProduct.StockQuantity.HasValue)
-            {
-                dbProduct.StockQuantity = Math.Max(0, dbProduct.StockQuantity.Value - cartItem.Quantity);
-                if (dbProduct.StockQuantity.Value == 0)
-                {
-                    dbProduct.IsAvailable = false;
-                }
-            }
+        if (response != null && response.Success && response.Data != null)
+        {
+            return MapDtoToModel(response.Data, orderType);
         }
 
-        _dbContext.Orders.Add(order);
-        await _dbContext.SaveChangesAsync();
-
-        return order;
+        var errorMessage = response?.Message ?? "Failed to place order with backend API.";
+        throw new InvalidOperationException(errorMessage);
     }
 
     public async Task<List<Order>> GetOrdersAsync()
     {
-        return await _dbContext.Orders
-            .Include(o => o.Cafe)
-            .Include(o => o.OrderItems)
-            .ThenInclude(oi => oi.Product)
-            .OrderByDescending(o => o.OrderDate)
-            .AsNoTracking()
-            .ToListAsync();
+        var response = await _apiClient.GetAsync<List<OrderDto>>($"{ApiConstants.Orders}/my-orders");
+        if (response != null && response.Success && response.Data != null)
+        {
+            return response.Data.Select(dto => MapDtoToModel(dto, null)).ToList();
+        }
+
+        return new List<Order>();
     }
 
     public async Task<Order?> GetOrderByIdAsync(int orderId)
     {
-        return await _dbContext.Orders
-            .Include(o => o.Cafe)
-            .Include(o => o.OrderItems)
-            .ThenInclude(oi => oi.Product)
-            .FirstOrDefaultAsync(o => o.Id == orderId);
+        var response = await _apiClient.GetAsync<OrderDto>($"{ApiConstants.Orders}/{orderId}");
+        if (response != null && response.Success && response.Data != null)
+        {
+            return MapDtoToModel(response.Data, null);
+        }
+
+        return null;
+    }
+
+    private static Order MapDtoToModel(OrderDto dto, string? orderTypeFallback)
+    {
+        var order = new Order
+        {
+            Id = dto.Id,
+            CafeId = dto.CafeId,
+            OrderDate = dto.CreatedAt.ToLocalTime(),
+            TotalAmount = dto.TotalAmount,
+            Status = dto.Status.ToString(),
+            OrderType = orderTypeFallback ?? (dto.DeliveryFee > 0 ? "Delivery" : "Pickup"),
+            DeliveryLocation = dto.DeliveryLocation,
+            Notes = dto.SpecialNotes,
+            Cafe = new Cafe
+            {
+                Id = dto.CafeId,
+                Name = dto.CafeName
+            }
+        };
+
+        if (dto.Items != null)
+        {
+            foreach (var item in dto.Items)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    Id = item.Id,
+                    OrderId = dto.Id,
+                    ProductId = item.ProductId ?? 0,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    Product = new Product
+                    {
+                        Id = item.ProductId ?? 0,
+                        Name = item.ProductName,
+                        Price = item.UnitPrice
+                    }
+                });
+            }
+        }
+
+        return order;
     }
 }

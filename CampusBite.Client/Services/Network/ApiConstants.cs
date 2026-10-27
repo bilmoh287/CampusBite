@@ -3,11 +3,14 @@ namespace CampusBite.Services.Network;
 public static class ApiConstants
 {
 #if ANDROID
-    // Android emulator routes the host development machine's loopback to 10.0.2.2
-    public const string BaseUrl = "http://10.0.2.2:5278";
+    // Virtual emulator uses 10.0.2.2; Physical phone connected via USB uses localhost (via adb reverse)
+    public static string BaseUrl => 
+        Microsoft.Maui.Devices.DeviceInfo.Current.DeviceType == Microsoft.Maui.Devices.DeviceType.Virtual
+            ? "http://10.0.2.2:5278"
+            : "http://localhost:5278";
 #else
     // Windows, macOS, and iOS Simulator directly share localhost loopback
-    public const string BaseUrl = "http://localhost:5278";
+    public static string BaseUrl => "http://localhost:5278";
 #endif
 
     public const string AuthLogin = "/api/auth/login";
