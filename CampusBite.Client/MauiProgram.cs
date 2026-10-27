@@ -1,6 +1,7 @@
 using CampusBite.Data;
 using CampusBite.Services.Implementations;
 using CampusBite.Services.Interfaces;
+using CampusBite.Services.Network;
 using CampusBite.ViewModels;
 using CampusBite.Views;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,16 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+
+        // 1. Register Network & Token Infrastructure
+        builder.Services.AddSingleton<IAuthTokenStorage, AuthTokenStorage>();
+        builder.Services.AddTransient<AuthHeaderHandler>();
+        builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
+        {
+            client.BaseAddress = new Uri(ApiConstants.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(30);
+        })
+        .AddHttpMessageHandler<AuthHeaderHandler>();
 
         // Register Database Context with Transient lifetime for thread safety in MAUI
         builder.Services.AddDbContext<AppDbContext>(ServiceLifetime.Transient, ServiceLifetime.Transient);
