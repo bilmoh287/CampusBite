@@ -53,6 +53,23 @@ public class ApiClient : IApiClient
         }
     }
 
+    public async Task<ApiResponse<TResponse>?> PutAsync<TRequest, TResponse>(string endpoint, TRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync(endpoint, request, _jsonOptions);
+            return await response.Content.ReadFromJsonAsync<ApiResponse<TResponse>>(_jsonOptions);
+        }
+        catch (HttpRequestException ex)
+        {
+            return ApiResponse<TResponse>.FailureResult($"Network connection error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<TResponse>.FailureResult($"An unexpected error occurred: {ex.Message}");
+        }
+    }
+
     public async Task<ApiResponse<TResponse>?> PatchAsync<TRequest, TResponse>(string endpoint, TRequest request)
     {
         try

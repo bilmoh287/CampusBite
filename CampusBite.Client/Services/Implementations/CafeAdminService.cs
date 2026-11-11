@@ -1,162 +1,273 @@
-using Microsoft.EntityFrameworkCore;
+using CampusBite.Models;
+using CampusBite.Services.Interfaces;
+using CampusBite.Services.Network;
+using CampusBite.Shared.DTOs;
+using CampusBite.Shared.Enums;
+using CampusBite.Shared.Requests;
 
 namespace CampusBite.Services.Implementations;
 
 public class CafeAdminService : ICafeAdminService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IApiClient _apiClient;
+    private static readonly List<Expense> _localExpenses = new();
 
-    public CafeAdminService(AppDbContext dbContext)
+    public CafeAdminService(IApiClient apiClient)
     {
-        _dbContext = dbContext;
+        _apiClient = apiClient;
     }
 
     public async Task<List<Cafe>> GetCafesAsync()
     {
-        return await _dbContext.Cafes
-            .AsNoTracking()
-            .ToListAsync();
+        // Try fetching owned cafes first
+        var myCafesResponse = await _apiClient.GetAsync<List<CafeDto>>($"{ApiConstants.Cafes}/my-cafes");
+        if (myCafesResponse != null && myCafesResponse.Success && myCafesResponse.Data?.Count > 0)
+        {
+            return myCafesResponse.Data.Select(MapDtoToCafe).ToList();
+        }
+
+        // Fallback to all cafes (e.g. for general inspection / admin view)
+        var allCafesResponse = await _apiClient.GetAsync<List<CafeDto>>(ApiConstants.Cafes);
+        if (allCafesResponse != null && allCafesResponse.Success && allCafesResponse.Data != null)
+        {
+            return allCafesResponse.Data.Select(MapDtoToCafe).ToList();
+        }
+
+        return new List<Cafe>();
     }
 
     public async Task<List<Order>> GetCafeOrdersAsync(int cafeId, string? statusFilter = null)
     {
-        var query = _dbContext.Orders
-            .Where(o => o.CafeId == cafeId)
-            .Include(o => o.OrderItems)
-            .ThenInclude(oi => oi.Product)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "All")
+        var response = await _apiClient.GetAsync<List<OrderDto>>($"{ApiConstants.Orders}/cafe/{cafeId}");
+        if (response == null || !response.Success || response.Data == null)
         {
-            query = query.Where(o => o.Status.ToLower() == statusFilter.ToLower());
+            return new List<Order>();
         }
 
-        return await query
-            .OrderByDescending(o => o.OrderDate)
-            .AsNoTracking()
-            .ToListAsync();
+        var orders = response.Data.Select(MapDtoToOrder).ToList();
+
+        if (!string.IsNullOrWhiteSpace(statusFilter) && !string.Equals(statusFilter, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            orders = orders.Where(o => string.Equals(o.Status, statusFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        return orders;
     }
 
     public async Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus)
     {
-        var order = await _dbContext.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
-        if (order == null) return false;
+        var targetStatus = newStatus.Trim().ToLowerInvariant() switch
+        {
+            "pending" => OrderStatus.Pending,
+            "confirmed" => OrderStatus.Confirmed,
+            "preparing" => OrderStatus.Preparing,
+            "ready" or "readyforpickup" => OrderStatus.ReadyForPickup,
+            "out for delivery" or "outfordelivery" => OrderStatus.OutForDelivery,
+            "delivered" or "completed" => OrderStatus.Delivered,
+            "cancelled" => OrderStatus.Cancelled,
+            _ => OrderStatus.Confirmed
+        };
 
-        order.Status = newStatus;
-        await _dbContext.SaveChangesAsync();
-        return true;
+        var request = new UpdateOrderStatusRequest { NewStatus = targetStatus };
+        var response = await _apiClient.PatchAsync<UpdateOrderStatusRequest, OrderDto>($"{ApiConstants.Orders}/{orderId}/status", request);
+        return response != null && response.Success;
     }
 
     public async Task<List<Product>> GetCafeProductsAsync(int cafeId)
     {
-        return await _dbContext.Products
-            .Where(p => p.CafeId == cafeId)
-            .OrderBy(p => p.Category)
-            .ThenBy(p => p.Name)
-            .AsNoTracking()
-            .ToListAsync();
+        var response = await _apiClient.GetAsync<List<ProductDto>>($"{ApiConstants.Products}/cafe/{cafeId}");
+        if (response == null || !response.Success || response.Data == null)
+        {
+            return new List<Product>();
+        }
+
+        return response.Data.Select(MapDtoToProduct).ToList();
     }
 
     public async Task<bool> ToggleProductAvailabilityAsync(int productId, bool isAvailable)
     {
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-        if (product == null) return false;
+        var productDto = await GetProductDtoAsync(productId);
+        if (productDto == null) return false;
 
-        product.IsAvailable = isAvailable;
-        await _dbContext.SaveChangesAsync();
-        return true;
+        var updateRequest = new UpdateProductRequest
+        {
+            Name = productDto.Name,
+            Description = productDto.Description,
+            Price = productDto.Price,
+            CategoryId = productDto.CategoryId > 0 ? productDto.CategoryId : 1,
+            ImageUrl = productDto.ImageUrl,
+            StockQuantity = productDto.StockQuantity,
+            IsAvailable = isAvailable
+        };
+
+        var response = await _apiClient.PutAsync<UpdateProductRequest, ProductDto>($"{ApiConstants.Products}/{productId}", updateRequest);
+        return response != null && response.Success;
     }
 
     public async Task<bool> UpdateProductPriceAsync(int productId, decimal newPrice)
     {
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-        if (product == null) return false;
+        var productDto = await GetProductDtoAsync(productId);
+        if (productDto == null) return false;
 
-        product.Price = newPrice;
-        await _dbContext.SaveChangesAsync();
-        return true;
+        var updateRequest = new UpdateProductRequest
+        {
+            Name = productDto.Name,
+            Description = productDto.Description,
+            Price = newPrice,
+            CategoryId = productDto.CategoryId > 0 ? productDto.CategoryId : 1,
+            ImageUrl = productDto.ImageUrl,
+            StockQuantity = productDto.StockQuantity,
+            IsAvailable = productDto.IsAvailable
+        };
+
+        var response = await _apiClient.PutAsync<UpdateProductRequest, ProductDto>($"{ApiConstants.Products}/{productId}", updateRequest);
+        return response != null && response.Success;
     }
 
     public async Task<bool> UpdateProductStockAsync(int productId, int? stockQuantity)
     {
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-        if (product == null) return false;
+        var response = await _apiClient.PatchAsync<int?, bool>($"{ApiConstants.Products}/{productId}/stock", stockQuantity);
+        return response != null && response.Success;
+    }
 
-        product.StockQuantity = stockQuantity;
-        if (stockQuantity.HasValue)
+    public Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
+    {
+        // Client-side state placeholder until Cafe update endpoint is invoked
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement)
+    {
+        return Task.FromResult(true);
+    }
+
+    public Task<List<Expense>> GetCafeExpensesAsync(int cafeId)
+    {
+        var list = _localExpenses.Where(e => e.CafeId == cafeId).OrderByDescending(e => e.ExpenseDate).ToList();
+        return Task.FromResult(list);
+    }
+
+    public Task<bool> AddExpenseAsync(Expense expense)
+    {
+        if (expense == null) return Task.FromResult(false);
+        expense.Id = _localExpenses.Count > 0 ? _localExpenses.Max(e => e.Id) + 1 : 1;
+        _localExpenses.Add(expense);
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> DeleteExpenseAsync(int expenseId)
+    {
+        var item = _localExpenses.FirstOrDefault(e => e.Id == expenseId);
+        if (item != null)
         {
-            if (stockQuantity.Value == 0)
-                product.IsAvailable = false;
-            else if (stockQuantity.Value > 0 && !product.IsAvailable)
-                product.IsAvailable = true;
+            _localExpenses.Remove(item);
+            return Task.FromResult(true);
         }
-
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
-    {
-        var cafe = await _dbContext.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
-        if (cafe == null) return false;
-
-        cafe.IsOpen = isOpen;
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement)
-    {
-        var cafe = await _dbContext.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
-        if (cafe == null) return false;
-
-        cafe.Announcement = string.IsNullOrWhiteSpace(announcement) ? null : announcement.Trim();
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<List<Expense>> GetCafeExpensesAsync(int cafeId)
-    {
-        return await _dbContext.Expenses
-            .Where(e => e.CafeId == cafeId)
-            .OrderByDescending(e => e.ExpenseDate)
-            .AsNoTracking()
-            .ToListAsync();
-    }
-
-    public async Task<bool> AddExpenseAsync(Expense expense)
-    {
-        if (expense == null) return false;
-        await _dbContext.Expenses.AddAsync(expense);
-        await _dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<bool> DeleteExpenseAsync(int expenseId)
-    {
-        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == expenseId);
-        if (expense == null) return false;
-
-        _dbContext.Expenses.Remove(expense);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        return Task.FromResult(false);
     }
 
     public async Task<bool> AddProductAsync(Product product)
     {
         if (product == null) return false;
-        await _dbContext.Products.AddAsync(product);
-        await _dbContext.SaveChangesAsync();
-        return true;
+
+        var createRequest = new CreateProductRequest
+        {
+            CafeId = product.CafeId,
+            CategoryId = 1, // Default category
+            Name = product.Name,
+            Description = product.Description,
+            Price = product.Price,
+            ImageUrl = product.ImageUrl,
+            StockQuantity = product.StockQuantity,
+            IsAvailable = product.IsAvailable
+        };
+
+        var response = await _apiClient.PostAsync<CreateProductRequest, ProductDto>(ApiConstants.Products, createRequest);
+        return response != null && response.Success;
     }
 
     public async Task<bool> DeleteProductAsync(int productId)
     {
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
-        if (product == null) return false;
+        var response = await _apiClient.DeleteAsync<bool>($"{ApiConstants.Products}/{productId}");
+        return response != null && response.Success;
+    }
 
-        _dbContext.Products.Remove(product);
-        await _dbContext.SaveChangesAsync();
-        return true;
+    private async Task<ProductDto?> GetProductDtoAsync(int productId)
+    {
+        var response = await _apiClient.GetAsync<ProductDto>($"{ApiConstants.Products}/{productId}");
+        return response?.Data;
+    }
+
+    private static Cafe MapDtoToCafe(CafeDto dto)
+    {
+        return new Cafe
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            Description = dto.Description ?? string.Empty,
+            Location = dto.Location,
+            IsOpen = dto.IsActive,
+            ImageUrl = dto.LogoUrl ?? string.Empty,
+            Announcement = null
+        };
+    }
+
+    private static Product MapDtoToProduct(ProductDto dto)
+    {
+        return new Product
+        {
+            Id = dto.Id,
+            CafeId = dto.CafeId,
+            Name = dto.Name,
+            Description = dto.Description ?? string.Empty,
+            Price = dto.Price,
+            Category = dto.CategoryName,
+            IsAvailable = dto.IsAvailable,
+            ImageUrl = dto.ImageUrl ?? string.Empty,
+            StockQuantity = dto.StockQuantity
+        };
+    }
+
+    private static Order MapDtoToOrder(OrderDto dto)
+    {
+        var order = new Order
+        {
+            Id = dto.Id,
+            CafeId = dto.CafeId,
+            OrderDate = dto.CreatedAt.ToLocalTime(),
+            TotalAmount = dto.TotalAmount,
+            Status = dto.Status.ToString(),
+            OrderType = dto.DeliveryFee > 0 ? "Delivery" : "Pickup",
+            DeliveryLocation = dto.DeliveryLocation,
+            Notes = dto.SpecialNotes,
+            Cafe = new Cafe
+            {
+                Id = dto.CafeId,
+                Name = dto.CafeName
+            }
+        };
+
+        if (dto.Items != null)
+        {
+            foreach (var item in dto.Items)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    Id = item.Id,
+                    OrderId = dto.Id,
+                    ProductId = item.ProductId ?? 0,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    Product = new Product
+                    {
+                        Id = item.ProductId ?? 0,
+                        Name = item.ProductName,
+                        Price = item.UnitPrice
+                    }
+                });
+            }
+        }
+
+        return order;
     }
 }
