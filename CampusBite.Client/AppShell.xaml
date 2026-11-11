@@ -6,28 +6,42 @@
     xmlns:views="clr-namespace:CampusBite.Views"
     Title="CampusBite">
 
-    <TabBar>
+    <!-- Auth Flow (Hidden from main tabs) -->
+    <ShellItem Route="LoginPage" FlyoutItemIsVisible="False">
         <ShellContent
+            Title="Sign In"
+            ContentTemplate="{DataTemplate views:LoginPage}"
+            Route="LoginPage" />
+    </ShellItem>
+
+    <!-- Main Navigation TabBar for Authenticated Users -->
+    <TabBar x:Name="AppTabBar" Route="Main">
+        <ShellContent
+            x:Name="CafesTab"
             Title="Cafés"
             ContentTemplate="{DataTemplate views:CafeListPage}"
             Route="CafeListPage" />
 
         <ShellContent
+            x:Name="CartTab"
             Title="Cart"
             ContentTemplate="{DataTemplate views:CartPage}"
             Route="CartPage" />
 
         <ShellContent
+            x:Name="OrdersTab"
             Title="Orders"
             ContentTemplate="{DataTemplate views:OrderHistoryPage}"
             Route="OrderHistoryPage" />
 
         <ShellContent
+            x:Name="CourierTab"
             Title="Courier"
             ContentTemplate="{DataTemplate views:DeliveryRunnerPage}"
             Route="DeliveryRunnerPage" />
 
         <ShellContent
+            x:Name="AdminTab"
             Title="Admin"
             ContentTemplate="{DataTemplate views:CafeAdminPage}"
             Route="CafeAdminPage" />

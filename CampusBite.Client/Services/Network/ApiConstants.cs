@@ -22,4 +22,5 @@ public static class ApiConstants
     public const string Cafes = "/api/cafes";
     public const string Products = "/api/products";
     public const string Orders = "/api/orders";
+    public const string Universities = "/api/universities";
 }

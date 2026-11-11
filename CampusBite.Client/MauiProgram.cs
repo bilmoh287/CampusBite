@@ -45,6 +45,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<ICartService, CartService>(); // Singleton state manager!
 
         // Register ViewModels
+        builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<RegisterViewModel>();
         builder.Services.AddTransient<MainViewModel>();
         builder.Services.AddTransient<CafeListViewModel>();
         builder.Services.AddTransient<CafeMenuViewModel>();
@@ -56,7 +58,10 @@ public static class MauiProgram
         builder.Services.AddTransient<CafeAdminViewModel>();
         builder.Services.AddTransient<DeliveryRunnerViewModel>();
 
-        // Register Views
+        // Register Views & App Navigation
+        builder.Services.AddSingleton<AppShell>();
+        builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<RegisterPage>();
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<CafeListPage>();
         builder.Services.AddTransient<CafeMenuPage>();
@@ -72,78 +77,6 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        var app = builder.Build();
-
-        // Initialize SQLite database and seed initial campus data on startup
-        using (var scope = app.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            dbContext.Database.EnsureCreated();
-
-            try
-            {
-                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Cafes ADD COLUMN Announcement TEXT;");
-            }
-            catch
-            {
-                // Column already exists or table was just created
-            }
-
-            try
-            {
-                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Orders ADD COLUMN DeliveryLocation TEXT;");
-            }
-            catch
-            {
-                // Column already exists or table was just created
-            }
-
-            try
-            {
-                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Orders ADD COLUMN Notes TEXT;");
-            }
-            catch
-            {
-                // Column already exists or table was just created
-            }
-
-            try
-            {
-                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN StockQuantity INTEGER;");
-            }
-            catch
-            {
-                // Column already exists or table was just created
-            }
-
-            try
-            {
-                dbContext.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN LowStockThreshold INTEGER DEFAULT 5;");
-            }
-            catch
-            {
-                // Column already exists or table was just created
-            }
-
-            try
-            {
-                dbContext.Database.ExecuteSqlRaw(@"
-                    CREATE TABLE IF NOT EXISTS Expenses (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        CafeId INTEGER NOT NULL,
-                        Title TEXT NOT NULL,
-                        Category TEXT NOT NULL,
-                        Amount TEXT NOT NULL,
-                        ExpenseDate TEXT NOT NULL,
-                        FOREIGN KEY (CafeId) REFERENCES Cafes (Id) ON DELETE CASCADE
-                    );");
-            }
-            catch
-            {
-                // Table already created
-            }
-        }
-
-        return app;
+        return builder.Build();
     }
 }
