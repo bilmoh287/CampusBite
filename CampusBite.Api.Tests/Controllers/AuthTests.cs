@@ -117,6 +117,6 @@ public class AuthTests : IClassFixture<CustomWebApplicationFactory>
         var result = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
         result.Should().NotBeNull();
         result!.Success.Should().BeFalse();
-        result.Message.Should().Contain("already in use");
+        result.Message.Should().Contain("already exists");
     }
 }

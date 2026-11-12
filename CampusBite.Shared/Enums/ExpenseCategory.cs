@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace CampusBite.Shared.Enums;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ExpenseCategory
 {
     Inventory = 0,
