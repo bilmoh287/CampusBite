@@ -180,7 +180,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
-app.UseRateLimiter(); // Enforce Rate Limiting before Auth/Controllers
+// Disable rate limiter in Testing environment so fast test runs do not get HTTP 429 Too Many Requests
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseRateLimiter(); // Enforce Rate Limiting before Auth/Controllers
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
