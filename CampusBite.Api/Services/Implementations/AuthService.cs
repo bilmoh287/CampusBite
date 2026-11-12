@@ -32,7 +32,7 @@ public class AuthService : IAuthService
     {
         // 1. Check if email is already registered
         var emailNormalized = request.Email.Trim().ToLowerInvariant();
-        if (await _context.Users.AnyAsync(u => u.Email.ToLower() == emailNormalized))
+        if (await _context.Users.AnyAsync(u => u.Email == emailNormalized || u.Email.ToLower() == emailNormalized))
         {
             return ApiResponse<AuthResponse>.FailureResult("An account with this email address already exists.");
         }

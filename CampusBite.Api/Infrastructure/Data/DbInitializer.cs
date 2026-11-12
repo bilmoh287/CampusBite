@@ -9,7 +9,14 @@ public static class DbInitializer
     public static async Task SeedAsync(CampusBiteDbContext context)
     {
         // Ensure database is created
-        await context.Database.MigrateAsync();
+        if (context.Database.IsRelational())
+        {
+            await context.Database.MigrateAsync();
+        }
+        else
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
 
         // 1. Seed Universities
         if (!await context.Universities.AnyAsync())
