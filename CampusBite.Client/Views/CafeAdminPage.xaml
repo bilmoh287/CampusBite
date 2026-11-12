@@ -9,6 +9,10 @@
              Title="Staff Dashboard ⚙️"
              BackgroundColor="#121212">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Sign Out" Command="{Binding LogoutCommand}" Priority="1" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="Auto, *">
 
         <!-- Top Header & Cafe Selector Bar -->

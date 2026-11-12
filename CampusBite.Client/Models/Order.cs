@@ -22,7 +22,7 @@ public partial class Order : ObservableObject
     public bool IsDelivery => OrderType == "Delivery";
 
     // Helper properties for ticket action buttons UX
-    public bool IsTerminalStatus => Status == "Completed" || Status == "Cancelled";
+    public bool IsTerminalStatus => Status == "Completed" || Status == "Cancelled" || Status == "Delivered";
     public bool CanBeCancelled => !IsTerminalStatus;
 
     // Navigation properties

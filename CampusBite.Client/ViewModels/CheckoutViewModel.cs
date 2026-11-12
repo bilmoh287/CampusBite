@@ -91,8 +91,8 @@ public partial class CheckoutViewModel : ObservableObject
                 "Awesome!"
             );
 
-            // Navigate back to Home (CafeListPage)
-            await Shell.Current.GoToAsync("//CafeListPage");
+            // Navigate to Order History so student can immediately monitor order status live
+            await Shell.Current.GoToAsync("//OrderHistoryPage");
         }
         catch (Exception ex)
         {

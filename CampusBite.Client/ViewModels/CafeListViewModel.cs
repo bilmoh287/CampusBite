@@ -62,4 +62,16 @@ public partial class CafeListViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(CafeMenuPage), navigationParameter);
     }
+
+    [RelayCommand]
+    private async Task LogoutAsync()
+    {
+        bool confirm = await Shell.Current.DisplayAlertAsync("Sign Out", "Are you sure you want to sign out?", "Sign Out", "Cancel");
+        if (!confirm) return;
+
+        if (Shell.Current is AppShell shell)
+        {
+            await shell.LogoutAsync();
+        }
+    }
 }
