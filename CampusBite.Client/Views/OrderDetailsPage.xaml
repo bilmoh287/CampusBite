@@ -5,14 +5,158 @@
              xmlns:models="clr-namespace:CampusBite.Models"
              x:Class="CampusBite.Views.OrderDetailsPage"
              x:DataType="vm:OrderDetailsViewModel"
-             Title="Order Receipt 🧾"
+             Title="Order Tracking 🧾"
              BackgroundColor="#121212">
 
     <ScrollView Padding="16">
-        <VerticalStackLayout Spacing="20">
+        <VerticalStackLayout Spacing="18">
+
+            <!-- Live Progress Stepper Card -->
+            <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#2A2A2A" Padding="18">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16">
+                    <!-- Status Header & Badge -->
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="{Binding StatusHeadline}" FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="{Binding StatusSubtitle}" FontSize="12" TextColor="#AAAAAA"/>
+                        </VerticalStackLayout>
+
+                        <Border Grid.Column="1"
+                                BackgroundColor="#2A2A2A"
+                                StrokeThickness="1"
+                                Stroke="{Binding StatusBadgeColor}"
+                                Padding="10,5"
+                                VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+                            <Label Text="{Binding StatusBadgeText}" FontSize="11" FontAttributes="Bold" TextColor="{Binding StatusBadgeColor}"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Cancelled Notice Card (Visible only when Cancelled) -->
+                    <Border BackgroundColor="#2C1B1B"
+                            StrokeThickness="1"
+                            Stroke="#F44336"
+                            Padding="12"
+                            IsVisible="{Binding IsCancelled}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="10"/>
+                        </Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="✕" FontSize="16" TextColor="#F44336" VerticalOptions="Center"/>
+                            <Label Text="This order has been cancelled. Stock has been restored." FontSize="12" TextColor="#FFCDD2" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Active 5-Step Progress Timeline (Visible when Not Cancelled) -->
+                    <VerticalStackLayout Spacing="10" IsVisible="{Binding IsNotCancelled}">
+                        <!-- Stepper Circles & Lines -->
+                        <Grid ColumnDefinitions="Auto, *, Auto, *, Auto, *, Auto, *, Auto"
+                              Padding="4,6"
+                              VerticalOptions="Center">
+
+                            <!-- Step 1: Placed -->
+                            <Border Grid.Column="0" WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="{Binding Step1Color}"
+                                    StrokeThickness="0">
+                                <Label Text="🕒" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+
+                            <!-- Line 1-2 -->
+                            <BoxView Grid.Column="1" HeightRequest="3"
+                                     Color="{Binding Line1Color}"
+                                     VerticalOptions="Center" Margin="-2,0"/>
+
+                            <!-- Step 2: Preparing -->
+                            <Border Grid.Column="2" WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="{Binding Step2Color}"
+                                    StrokeThickness="0">
+                                <Label Text="🍳" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+
+                            <!-- Line 2-3 -->
+                            <BoxView Grid.Column="3" HeightRequest="3"
+                                     Color="{Binding Line2Color}"
+                                     VerticalOptions="Center" Margin="-2,0"/>
+
+                            <!-- Step 3: Ready -->
+                            <Border Grid.Column="4" WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="{Binding Step3Color}"
+                                    StrokeThickness="0">
+                                <Label Text="📦" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+
+                            <!-- Line 3-4 -->
+                            <BoxView Grid.Column="5" HeightRequest="3"
+                                     Color="{Binding Line3Color}"
+                                     VerticalOptions="Center" Margin="-2,0"/>
+
+                            <!-- Step 4: Out for Delivery or Counter Handover -->
+                            <Border Grid.Column="6" WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="{Binding Step4Color}"
+                                    StrokeThickness="0">
+                                <Label Text="{Binding Step4Icon}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+
+                            <!-- Line 4-5 -->
+                            <BoxView Grid.Column="7" HeightRequest="3"
+                                     Color="{Binding Line4Color}"
+                                     VerticalOptions="Center" Margin="-2,0"/>
+
+                            <!-- Step 5: Delivered -->
+                            <Border Grid.Column="8" WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="{Binding Step5Color}"
+                                    StrokeThickness="0">
+                                <Label Text="🎉" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Step Labels Row -->
+                        <Grid ColumnDefinitions="*, *, *, *, *" Padding="0,2">
+                            <Label Grid.Column="0" Text="Placed" FontSize="10" TextColor="#AAAAAA" HorizontalTextAlignment="Center"/>
+                            <Label Grid.Column="1" Text="Cooking" FontSize="10" TextColor="#AAAAAA" HorizontalTextAlignment="Center"/>
+                            <Label Grid.Column="2" Text="Ready" FontSize="10" TextColor="#AAAAAA" HorizontalTextAlignment="Center"/>
+                            <Label Grid.Column="3" Text="{Binding Step4Title}" FontSize="10" TextColor="#AAAAAA" HorizontalTextAlignment="Center"/>
+                            <Label Grid.Column="4" Text="Done" FontSize="10" TextColor="#AAAAAA" HorizontalTextAlignment="Center"/>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Interactive Actions Row (Refresh & Cancel) -->
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10" Margin="0,4,0,0">
+                        <Button Grid.Column="0"
+                                Text="🔄 Refresh Status"
+                                Command="{Binding RefreshOrderCommand}"
+                                IsEnabled="{Binding IsNotRefreshing}"
+                                BackgroundColor="#2A2A2A"
+                                TextColor="#FF9800"
+                                FontAttributes="Bold"
+                                FontSize="13"
+                                CornerRadius="10"
+                                HeightRequest="40"/>
+
+                        <Button Grid.Column="1"
+                                Text="✕ Cancel Order"
+                                Command="{Binding CancelOrderCommand}"
+                                IsVisible="{Binding CanCancel}"
+                                IsEnabled="{Binding IsNotRefreshing}"
+                                BackgroundColor="#3D1E1E"
+                                TextColor="#F44336"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                CornerRadius="10"
+                                HeightRequest="40"
+                                Padding="14,0"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
 
             <!-- Receipt Header Card -->
-            <Border BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="20">
+            <Border BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="18">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16"/>
                 </Border.StrokeShape>
@@ -20,16 +164,11 @@
                 <VerticalStackLayout Spacing="12">
                     <Grid ColumnDefinitions="*, Auto">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
-                            <Label Text="{Binding Order.Id, StringFormat='Order #{0}'}" FontSize="22" FontAttributes="Bold" TextColor="White"/>
-                            <Label Text="{Binding FormattedDate}" FontSize="13" TextColor="#AAAAAA"/>
+                            <Label Text="{Binding Order.Id, StringFormat='Order #{0}'}" FontSize="20" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="{Binding FormattedDate}" FontSize="12" TextColor="#AAAAAA"/>
                         </VerticalStackLayout>
 
-                        <Border Grid.Column="1" BackgroundColor="#2C2415" StrokeThickness="1" Stroke="#FF9800" Padding="12,4" VerticalOptions="Center">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="12"/>
-                            </Border.StrokeShape>
-                            <Label Text="{Binding Order.Status}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800"/>
-                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Order.Cafe.Name, FallbackValue='Campus Diner'}" FontSize="14" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
                     </Grid>
 
                     <BoxView HeightRequest="1" Color="#333333"/>

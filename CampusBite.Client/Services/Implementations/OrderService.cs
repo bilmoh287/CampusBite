@@ -75,6 +75,13 @@ public class OrderService : IOrderService
         return null;
     }
 
+    public async Task<bool> CancelOrderAsync(int orderId)
+    {
+        var request = new UpdateOrderStatusRequest { NewStatus = OrderStatus.Cancelled };
+        var response = await _apiClient.PatchAsync<UpdateOrderStatusRequest, OrderDto>($"{ApiConstants.Orders}/{orderId}/status", request);
+        return response != null && response.Success;
+    }
+
     private static Order MapDtoToModel(OrderDto dto, string? orderTypeFallback)
     {
         var order = new Order
