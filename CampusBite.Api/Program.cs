@@ -25,6 +25,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICafeService, CafeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IContractService, ContractService>();
 
 // 3. JWT Authentication (Layer 2)
 var jwtSecret = builder.Configuration["JwtSettings:Secret"] 

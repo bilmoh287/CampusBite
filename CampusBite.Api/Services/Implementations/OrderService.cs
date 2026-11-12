@@ -90,6 +90,7 @@ public class OrderService : IOrderService
 
         // 4. Meal Contract Handling (if payment method is MealContract)
         StudentContract? activeContract = null;
+        int creditsToDeduct = 0;
         if (request.PaymentMethod == PaymentMethod.MealContract)
         {
             activeContract = await _context.StudentContracts
@@ -106,18 +107,38 @@ public class OrderService : IOrderService
                 return ApiResponse<OrderDto>.FailureResult("You do not have an active meal subscription plan with this café.");
             }
 
-            // Check remaining credits and overdraft tab allowance
+            // Check remaining credits + overdraft buffer
             int totalAvailableCredits = activeContract.RemainingCredits + (activeContract.AllowOverdraft ? activeContract.OverdraftLimit : 0);
             if (totalAvailableCredits < 1)
             {
                 return ApiResponse<OrderDto>.FailureResult("Your meal contract credits and overdraft allowance are completely depleted.");
             }
 
-            // Deduct 1 credit for the meal
-            activeContract.RemainingCredits -= 1;
-            discountAmount = subtotal; // Meal covered by contract!
-            totalAmount = deliveryFee; // Student only pays delivery fee (or zero if pickup)
+            // Total quantity of meals requested in this order
+            int totalMealCount = orderItems.Sum(oi => oi.Quantity);
 
+            // Determine how many meals are covered by available contract credits
+            creditsToDeduct = Math.Min(totalMealCount, totalAvailableCredits);
+
+            // Calculate credit discount:
+            // If all meals are covered by credits: discount = full subtotal
+            // If partial (hybrid payment): proportionally discount the covered items!
+            if (creditsToDeduct >= totalMealCount)
+            {
+                discountAmount = subtotal; // 100% of food covered by contract credits!
+                totalAmount = deliveryFee; // Student only pays delivery fee (or zero if pickup)
+            }
+            else
+            {
+                // Hybrid: e.g. 3 meals ordered, 2 covered by credits, 1 paid in cash
+                decimal averageItemPrice = subtotal / totalMealCount;
+                discountAmount = Math.Round(averageItemPrice * creditsToDeduct, 2);
+                totalAmount = (subtotal - discountAmount) + deliveryFee;
+            }
+
+            activeContract.RemainingCredits -= creditsToDeduct;
+
+            // If remaining credits dropped to zero (or negative debt) and overdraft not allowed, mark depleted
             if (activeContract.RemainingCredits <= 0 && !activeContract.AllowOverdraft)
             {
                 activeContract.Status = ContractStatus.Depleted;
@@ -154,7 +175,7 @@ public class OrderService : IOrderService
             {
                 StudentContractId = activeContract.Id,
                 OrderId = order.Id,
-                CreditsDeducted = 1,
+                CreditsDeducted = creditsToDeduct,
                 RemainingCreditsAfter = activeContract.RemainingCredits,
                 UsedAt = DateTime.UtcNow
             };
