@@ -21,7 +21,7 @@
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Finalize Your Order 📝" FontSize="20" FontAttributes="Bold" TextColor="White"/>
-                        <Label Text="Choose pickup or campus delivery and confirm your item list." FontSize="13" TextColor="#AAAAAA"/>
+                        <Label Text="Select order type, payment method, and review your item summary." FontSize="13" TextColor="#AAAAAA"/>
                     </VerticalStackLayout>
                 </Border>
 
@@ -50,7 +50,7 @@
                             </Border.GestureRecognizers>
                             <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
                                 <Label Text="🚶 Pickup" FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
-                                <Label Text="Collect at Cafe" FontSize="11" TextColor="#AAAAAA" HorizontalOptions="Center"/>
+                                <Label Text="Collect at Cafe Counter" FontSize="11" TextColor="#AAAAAA" HorizontalOptions="Center"/>
                             </VerticalStackLayout>
                         </Border>
 
@@ -75,7 +75,7 @@
                             </Border.GestureRecognizers>
                             <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
                                 <Label Text="🛵 Delivery" FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
-                                <Label Text="+$2.50 fee" FontSize="11" TextColor="#FF9800" HorizontalOptions="Center"/>
+                                <Label Text="+15.00 ETB fee" FontSize="11" TextColor="#FF9800" HorizontalOptions="Center"/>
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
@@ -96,6 +96,94 @@
                     </Border>
                 </VerticalStackLayout>
 
+                <!-- Payment Method Selection -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Payment Method" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                        <!-- Cash Option -->
+                        <Border Grid.Column="0"
+                                BackgroundColor="#1E1E1E"
+                                StrokeThickness="1"
+                                Stroke="#333333"
+                                Padding="12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsCashSelected}" Value="True">
+                                    <Setter Property="Stroke" Value="#4CAF50" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                    <Setter Property="BackgroundColor" Value="#17281A" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectPaymentMethodCommand}" CommandParameter="Cash"/>
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Label Text="💵 Cash" FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                                <Label Text="Pay on drop-off/counter" FontSize="11" TextColor="#AAAAAA" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Meal Contract Pass Option -->
+                        <Border Grid.Column="1"
+                                BackgroundColor="#1E1E1E"
+                                StrokeThickness="1"
+                                Stroke="#333333"
+                                Padding="12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsContractSelected}" Value="True">
+                                    <Setter Property="Stroke" Value="#9C27B0" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                    <Setter Property="BackgroundColor" Value="#29152C" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectPaymentMethodCommand}" CommandParameter="MealContract"/>
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Label Text="🍱 Meal Pass" FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                                <Label Text="Prepaid Credits / Tab" FontSize="11" TextColor="#CE93D8" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- Active Meal Contract Details (Visible when Meal Pass Selected) -->
+                <Border BackgroundColor="#1E1E1E"
+                        StrokeThickness="1"
+                        Stroke="#9C27B0"
+                        Padding="14"
+                        IsVisible="{Binding IsContractSelected}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="Active Dining Contract" FontSize="14" FontAttributes="Bold" TextColor="#CE93D8"/>
+                                <Label Text="{Binding ContractSummaryText}" FontSize="12" TextColor="#CCCCCC"/>
+                            </VerticalStackLayout>
+                            <Border Grid.Column="1" BackgroundColor="#3A1C40" StrokeThickness="0" Padding="8,4" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8"/>
+                                </Border.StrokeShape>
+                                <Label Text="{Binding AvailableCredits, StringFormat='{0} Credits'}" FontSize="12" FontAttributes="Bold" TextColor="#E1BEE7"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Credits Coverage Note -->
+                        <Label Text="{Binding CoveredMealsCount, StringFormat='🍱 {0} meal(s) in this order will be covered by your contract credits.'}"
+                               FontSize="12"
+                               TextColor="#81C784"
+                               FontAttributes="Bold"
+                               IsVisible="{Binding HasDiscount}"/>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Special Notes Input -->
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Special Instructions / Notes (Optional)" FontSize="14" FontAttributes="Bold" TextColor="White"/>
@@ -104,7 +192,7 @@
                             <RoundRectangle CornerRadius="8"/>
                         </Border.StrokeShape>
                         <Entry Text="{Binding Notes}"
-                               Placeholder="e.g. Extra napkins, call upon arrival"
+                               Placeholder="e.g. Extra napkins, please call upon arrival"
                                PlaceholderColor="#666666"
                                TextColor="White"
                                FontSize="14"/>
@@ -119,14 +207,14 @@
                             <RoundRectangle CornerRadius="12"/>
                         </Border.StrokeShape>
                         <VerticalStackLayout Spacing="12">
-                            <!-- Safe BindableLayout inside ScrollView -->
+                            <!-- Items List -->
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding CartItems}" Spacing="4">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="models:CartItem">
                                         <Grid ColumnDefinitions="*, Auto, Auto" Padding="0,6" ColumnSpacing="12">
                                             <Label Grid.Column="0" Text="{Binding Product.Name}" FontSize="14" TextColor="White" VerticalOptions="Center"/>
                                             <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="14" TextColor="#AAAAAA" VerticalOptions="Center"/>
-                                            <Label Grid.Column="2" Text="{Binding TotalPrice, StringFormat='${0:F2}'}" FontSize="14" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
+                                            <Label Grid.Column="2" Text="{Binding TotalPrice, StringFormat='{0:F2} ETB'}" FontSize="14" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
                                         </Grid>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
@@ -135,41 +223,56 @@
                             <BoxView HeightRequest="1" Color="#333333"/>
 
                             <!-- Bill Breakdown -->
-                            <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="6">
+                            <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="6">
                                 <Label Grid.Row="0" Grid.Column="0" Text="Subtotal" FontSize="13" TextColor="#AAAAAA"/>
-                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Subtotal, StringFormat='${0:F2}'}" FontSize="13" TextColor="White"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Subtotal, StringFormat='{0:F2} ETB'}" FontSize="13" TextColor="White"/>
 
-                                <Label Grid.Row="1" Grid.Column="0" Text="Delivery Fee" FontSize="13" TextColor="#AAAAAA"/>
-                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding DeliveryFee, StringFormat='${0:F2}'}" FontSize="13" TextColor="White"/>
+                                <!-- Meal Pass Discount Row -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="Meal Contract Discount" FontSize="13" TextColor="#81C784" IsVisible="{Binding HasDiscount}"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding DiscountAmount, StringFormat='-{0:F2} ETB'}" FontSize="13" FontAttributes="Bold" TextColor="#81C784" IsVisible="{Binding HasDiscount}"/>
 
-                                <Label Grid.Row="2" Grid.Column="0" Text="Total Amount" FontSize="16" FontAttributes="Bold" TextColor="White"/>
-                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="18" FontAttributes="Bold" TextColor="#FF9800"/>
+                                <Label Grid.Row="2" Grid.Column="0" Text="Delivery Fee" FontSize="13" TextColor="#AAAAAA"/>
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding DeliveryFee, StringFormat='{0:F2} ETB'}" FontSize="13" TextColor="White"/>
+
+                                <Label Grid.Row="3" Grid.Column="0" Text="Total Amount Due" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                <Label Grid.Row="3" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='{0:F2} ETB'}" FontSize="18" FontAttributes="Bold" TextColor="#FF9800"/>
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
 
+                <!-- Group Dining Split Bill Card (Visible for 2+ items) -->
+                <Border BackgroundColor="#1E2836"
+                        StrokeThickness="1"
+                        Stroke="#2196F3"
+                        Padding="14"
+                        IsVisible="{Binding HasGroupOrder}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="👥" FontSize="20" VerticalOptions="Center" Margin="0,0,10,0"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Group Split Bill Helper" FontSize="13" FontAttributes="Bold" TextColor="#64B5F6"/>
+                            <Label Text="{Binding PerPersonShareText}" FontSize="12" TextColor="#E3F2FD"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Bottom Action Bar -->
+        <!-- Bottom Action Bar (Fixed at bottom) -->
         <Border Grid.Row="1" BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="16">
-            <Grid ColumnDefinitions="*, Auto">
-                <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
-                    <Label Text="Total Due" FontSize="12" TextColor="#AAAAAA"/>
-                    <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="20" FontAttributes="Bold" TextColor="#FF9800"/>
-                </VerticalStackLayout>
-
-                <Button Grid.Column="1"
-                        Text="Confirm &amp; Place Order 🚀"
-                        Command="{Binding PlaceOrderCommand}"
-                        IsEnabled="{Binding IsNotProcessing}"
-                        BackgroundColor="#FF9800"
-                        TextColor="Black"
-                        FontAttributes="Bold"
-                        CornerRadius="22"
-                        Padding="24,12"/>
-            </Grid>
+            <Button Text="Place Order"
+                    Command="{Binding PlaceOrderCommand}"
+                    IsEnabled="{Binding IsNotProcessing}"
+                    BackgroundColor="#FF9800"
+                    TextColor="#121212"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    CornerRadius="12"
+                    HeightRequest="52"/>
         </Border>
 
     </Grid>

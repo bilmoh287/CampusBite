@@ -23,4 +23,5 @@ public static class ApiConstants
     public const string Products = "/api/products";
     public const string Orders = "/api/orders";
     public const string Universities = "/api/universities";
+    public const string Contracts = "/api/contracts";
 }

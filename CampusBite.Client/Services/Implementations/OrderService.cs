@@ -17,7 +17,7 @@ public class OrderService : IOrderService
         _apiClient = apiClient;
     }
 
-    public async Task<Order> CreateOrderAsync(int cafeId, string orderType, string? deliveryLocation, string? notes, IEnumerable<CartItem> cartItems)
+    public async Task<Order> CreateOrderAsync(int cafeId, string orderType, string? deliveryLocation, string? notes, IEnumerable<CartItem> cartItems, PaymentMethod paymentMethod = PaymentMethod.Cash)
     {
         var itemsList = cartItems.ToList();
         if (!itemsList.Any())
@@ -33,7 +33,7 @@ public class OrderService : IOrderService
         {
             CafeId = cafeId,
             DeliveryLocation = location,
-            PaymentMethod = PaymentMethod.Cash,
+            PaymentMethod = paymentMethod,
             SpecialNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             Items = itemsList.Select(c => new CreateOrderItemRequest
             {

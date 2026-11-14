@@ -42,6 +42,7 @@ public static class MauiProgram
         builder.Services.AddTransient<IOrderService, OrderService>();
         builder.Services.AddTransient<ICafeAdminService, CafeAdminService>();
         builder.Services.AddTransient<IDeliveryService, DeliveryService>();
+        builder.Services.AddTransient<IContractService, ContractService>();
         builder.Services.AddSingleton<ICartService, CartService>(); // Singleton state manager!
 
         // Register ViewModels
