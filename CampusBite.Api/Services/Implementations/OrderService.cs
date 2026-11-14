@@ -101,14 +101,19 @@ public class OrderService : IOrderService
                 .Include(sc => sc.ContractPlan)
                 .Where(sc => sc.StudentId == customerId && 
                              sc.ContractPlan.CafeId == request.CafeId && 
-                             sc.Status == ContractStatus.Active &&
                              sc.EndDate >= DateTime.UtcNow)
-                .OrderBy(sc => sc.EndDate)
+                .OrderByDescending(sc => sc.Status == ContractStatus.Active)
+                .ThenBy(sc => sc.EndDate)
                 .FirstOrDefaultAsync();
 
             if (activeContract == null)
             {
                 return ApiResponse<OrderDto>.FailureResult("You do not have an active meal subscription plan with this café.");
+            }
+
+            if (activeContract.Status == ContractStatus.Depleted)
+            {
+                return ApiResponse<OrderDto>.FailureResult("Your meal contract credits and overdraft allowance are completely depleted.");
             }
 
             // Check remaining credits + overdraft buffer

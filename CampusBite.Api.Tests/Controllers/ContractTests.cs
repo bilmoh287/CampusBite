@@ -100,7 +100,7 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
 
         var plansResponse = await studentClient.GetAsync("/api/contracts/plans/cafe/1");
         var plans = (await plansResponse.Content.ReadFromJsonAsync<ApiResponse<List<ContractPlanDto>>>())!.Data!;
-        var plan = plans.First(); // 30 meals
+        var plan = plans.First(p => p.TotalCredits >= 30); // 30 meals plan
 
         // First subscription
         var sub1 = await studentClient.PostAsJsonAsync("/api/contracts/subscribe", new SubscribeToPlanRequest { ContractPlanId = plan.Id });
@@ -125,7 +125,7 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         // Subscribe to a 30-meal plan
         var plansResponse = await studentClient.GetAsync("/api/contracts/plans/cafe/1");
         var plans = (await plansResponse.Content.ReadFromJsonAsync<ApiResponse<List<ContractPlanDto>>>())!.Data!;
-        var plan = plans.First();
+        var plan = plans.First(p => p.TotalCredits >= 30);
 
         var subResponse = await studentClient.PostAsJsonAsync("/api/contracts/subscribe", new SubscribeToPlanRequest { ContractPlanId = plan.Id });
         var initialContract = (await subResponse.Content.ReadFromJsonAsync<ApiResponse<StudentContractDto>>())!.Data!;
@@ -170,7 +170,8 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
 
         // Ensure student has a contract
         var plansResponse = await studentClient.GetAsync("/api/contracts/plans/cafe/1");
-        var plan = (await plansResponse.Content.ReadFromJsonAsync<ApiResponse<List<ContractPlanDto>>>())!.Data!.First();
+        var plans = (await plansResponse.Content.ReadFromJsonAsync<ApiResponse<List<ContractPlanDto>>>())!.Data!;
+        var plan = plans.First(p => p.TotalCredits >= 30);
         var subResponse = await studentClient.PostAsJsonAsync("/api/contracts/subscribe", new SubscribeToPlanRequest { ContractPlanId = plan.Id });
         var contract = (await subResponse.Content.ReadFromJsonAsync<ApiResponse<StudentContractDto>>())!.Data!;
 
