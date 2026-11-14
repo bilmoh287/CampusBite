@@ -196,7 +196,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("AllowAll");
 
 // Disable rate limiter in Testing environment so fast test runs do not get HTTP 429 Too Many Requests

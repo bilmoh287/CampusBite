@@ -73,6 +73,8 @@
                                 StrokeThickness="1"
                                 Padding="12,4">
                             <Entry Text="{Binding Email}"
+                                   TextColor="#1A1A1A"
+                                   PlaceholderColor="#888888"
                                    Placeholder="student@aau.edu.et"
                                    Keyboard="Email"
                                    ClearButtonVisibility="WhileEditing"
@@ -91,6 +93,8 @@
                                 StrokeThickness="1"
                                 Padding="12,4">
                             <Entry Text="{Binding Password}"
+                                   TextColor="#1A1A1A"
+                                   PlaceholderColor="#888888"
                                    Placeholder="••••••••"
                                    IsPassword="True"
                                    ClearButtonVisibility="WhileEditing"

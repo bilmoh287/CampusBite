@@ -97,6 +97,8 @@
                                 StrokeThickness="1"
                                 Padding="12,4">
                             <Entry Text="{Binding FullName}"
+                                   TextColor="#1A1A1A"
+                                   PlaceholderColor="#888888"
                                    Placeholder="e.g. Abebe Bikila"
                                    ClearButtonVisibility="WhileEditing"
                                    FontSize="14" />
@@ -114,6 +116,8 @@
                                 StrokeThickness="1"
                                 Padding="12,4">
                             <Entry Text="{Binding Email}"
+                                   TextColor="#1A1A1A"
+                                   PlaceholderColor="#888888"
                                    Placeholder="name@campus.edu"
                                    Keyboard="Email"
                                    ClearButtonVisibility="WhileEditing"
@@ -132,6 +136,8 @@
                                 StrokeThickness="1"
                                 Padding="12,4">
                             <Entry Text="{Binding Password}"
+                                   TextColor="#1A1A1A"
+                                   PlaceholderColor="#888888"
                                    Placeholder="••••••••"
                                    IsPassword="True"
                                    ClearButtonVisibility="WhileEditing"
@@ -150,6 +156,8 @@
                                 StrokeThickness="1"
                                 Padding="12,4">
                             <Entry Text="{Binding PhoneNumber}"
+                                   TextColor="#1A1A1A"
+                                   PlaceholderColor="#888888"
                                    Placeholder="+251 911 234567"
                                    Keyboard="Telephone"
                                    ClearButtonVisibility="WhileEditing"
