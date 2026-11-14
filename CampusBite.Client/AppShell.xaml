@@ -29,6 +29,12 @@
             Route="CartPage" />
 
         <ShellContent
+            x:Name="PassesTab"
+            Title="Meal Pass"
+            ContentTemplate="{DataTemplate views:MealPlansPage}"
+            Route="MealPlansPage" />
+
+        <ShellContent
             x:Name="OrdersTab"
             Title="Orders"
             ContentTemplate="{DataTemplate views:OrderHistoryPage}"

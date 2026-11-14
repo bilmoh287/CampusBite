@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CampusBite.ViewModels"
+             xmlns:dtos="clr-namespace:CampusBite.Shared.DTOs;assembly=CampusBite.Shared"
+             xmlns:models="clr-namespace:CampusBite.Models"
+             x:Class="CampusBite.Views.MealPlansPage"
+             x:DataType="vm:MealPlansViewModel"
+             Title="Dining Passes &amp; Wallet"
+             BackgroundColor="#F8F9FA">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="16">
+
+                <!-- 1. Active Pass / Credit Wallet Card -->
+                <Border StrokeShape="RoundRectangle 16"
+                        StrokeThickness="0"
+                        BackgroundColor="#512BD4"
+                        Padding="20"
+                        IsVisible="{Binding HasActiveContract}">
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="ACTIVE DINING WALLET"
+                                       FontSize="11"
+                                       FontAttributes="Bold"
+                                       TextColor="#E0D0FF"
+                                       CharacterSpacing="1.2" />
+                                <Label Text="{Binding ActiveContract.CafeName}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="White" />
+                            </VerticalStackLayout>
+                            
+                            <Border Grid.Column="1"
+                                    StrokeShape="RoundRectangle 12"
+                                    BackgroundColor="#2E1685"
+                                    Padding="10,4"
+                                    StrokeThickness="0">
+                                <Label Text="{Binding ActiveContract.PlanName}"
+                                       FontSize="11"
+                                       FontAttributes="Bold"
+                                       TextColor="#FFE082" />
+                            </Border>
+                        </Grid>
+
+                        <!-- Remaining Credits Display -->
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                            <VerticalStackLayout Grid.Column="0">
+                                <HorizontalStackLayout Spacing="6" VerticalOptions="End">
+                                    <Label Text="{Binding ActiveContract.RemainingCredits}"
+                                           FontSize="36"
+                                           FontAttributes="Bold"
+                                           TextColor="White" />
+                                    <Label Text="meals left"
+                                           FontSize="14"
+                                           TextColor="#E0D0FF"
+                                           Margin="0,0,0,6"
+                                           VerticalOptions="End" />
+                                </HorizontalStackLayout>
+                                <Label Text="{Binding ActiveContract.TotalCredits, StringFormat='Original Pass: {0} meals'}"
+                                       FontSize="12"
+                                       TextColor="#D1C4E9" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label Text="⏳" FontSize="12" />
+                                    <Label Text="{Binding ActiveContract.DaysRemaining, StringFormat='{0} days left'}"
+                                           FontSize="13"
+                                           FontAttributes="Bold"
+                                           TextColor="White" />
+                                </HorizontalStackLayout>
+                                <Label Text="{Binding ActiveContract.EndDate, StringFormat='Exp: {0:MMM dd}'}"
+                                       FontSize="11"
+                                       TextColor="#D1C4E9"
+                                       HorizontalOptions="End" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Overdraft Debt Alert Banner (Shown only if In Debt) -->
+                        <Border IsVisible="{Binding IsInDebt}"
+                                StrokeShape="RoundRectangle 8"
+                                BackgroundColor="#FFEBEE"
+                                Stroke="#E53935"
+                                StrokeThickness="1"
+                                Padding="12,8">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Label Grid.Column="0" Text="🚨" FontSize="16" VerticalOptions="Center" Margin="0,0,8,0" />
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="Account in Overdraft!"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="#C62828" />
+                                    <Label Text="{Binding DebtAmountText, StringFormat='{0}. Settle at counter or top up to clear debt.'}"
+                                           FontSize="11"
+                                           TextColor="#B71C1C" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <!-- Overdraft Protected Badge (if allowed and not in debt) -->
+                        <HorizontalStackLayout Spacing="6" 
+                                               IsVisible="{Binding ActiveContract.AllowOverdraft}">
+                            <Label Text="🛡️" FontSize="12" VerticalOptions="Center" />
+                            <Label Text="{Binding ActiveContract.OverdraftLimit, StringFormat='Overdraft protected: up to {0} emergency meals allowed.'}"
+                                   FontSize="11"
+                                   TextColor="#E0D0FF"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- No Active Pass Card -->
+                <Border StrokeShape="RoundRectangle 16"
+                        StrokeThickness="1"
+                        Stroke="#E0E0E0"
+                        BackgroundColor="White"
+                        Padding="20"
+                        IsVisible="{Binding HasActiveContract, Converter={x:Null}}">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding HasActiveContract}" Value="True">
+                            <Setter Property="IsVisible" Value="False" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Border" Binding="{Binding HasActiveContract}" Value="False">
+                            <Setter Property="IsVisible" Value="True" />
+                        </DataTrigger>
+                    </Border.Triggers>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="🍱" FontSize="24" VerticalOptions="Center" />
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="No Active Dining Pass"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#333333" />
+                                <Label Text="Subscribe below to save up to 25% per meal!"
+                                       FontSize="12"
+                                       TextColor="#666666" />
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                        <Label Text="Campus passes offer bulk discounted meals, automatic rollover on renewals, and café overdraft support."
+                               FontSize="11"
+                               TextColor="#757575"
+                               Margin="0,4,0,0" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- 2. Select Cafeteria Switcher -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="SELECT CAMPUS CAFETERIA"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           TextColor="#757575"
+                           CharacterSpacing="1" />
+
+                    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Cafes}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:Cafe">
+                                    <Border StrokeShape="RoundRectangle 20"
+                                            Padding="14,8"
+                                            StrokeThickness="1"
+                                            Stroke="#D1C4E9"
+                                            BackgroundColor="White">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MealPlansViewModel}}, Path=SelectCafeCommand}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                            <Label Text="☕" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="{Binding Name}" 
+                                                   FontSize="12" 
+                                                   FontAttributes="Bold" 
+                                                   TextColor="#512BD4" 
+                                                   VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </ScrollView>
+                </VerticalStackLayout>
+
+                <!-- 3. Available Plans List -->
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{Binding SelectedCafe.Name, StringFormat='AVAILABLE PASSES AT {0}'}"
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               TextColor="#757575"
+                               CharacterSpacing="1" />
+
+                        <Label Grid.Column="1"
+                               Text="100% Food Coverage"
+                               FontSize="10"
+                               FontAttributes="Bold"
+                               TextColor="#2E7D32" />
+                    </Grid>
+
+                    <CollectionView ItemsSource="{Binding AvailablePlans}"
+                                    SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <Border StrokeShape="RoundRectangle 12"
+                                    BackgroundColor="White"
+                                    Padding="24"
+                                    StrokeThickness="0">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="6">
+                                    <Label Text="🍽️" FontSize="28" HorizontalOptions="Center" />
+                                    <Label Text="No active subscription plans available for this café."
+                                           FontSize="13"
+                                           TextColor="#757575"
+                                           HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="dtos:ContractPlanDto">
+                                <Border StrokeShape="RoundRectangle 16"
+                                        BackgroundColor="White"
+                                        StrokeThickness="1"
+                                        Stroke="#EEEEEE"
+                                        Padding="16"
+                                        Margin="0,0,0,12">
+                                    <VerticalStackLayout Spacing="10">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <VerticalStackLayout Grid.Column="0">
+                                                <Label Text="{Binding Name}"
+                                                       FontSize="16"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#212121" />
+                                                <Label Text="{Binding Description}"
+                                                       FontSize="12"
+                                                       TextColor="#757575"
+                                                       Margin="0,2,0,0" />
+                                            </VerticalStackLayout>
+
+                                            <!-- Price Badge -->
+                                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End">
+                                                <Label Text="{Binding Price, StringFormat='{0:F2} ETB'}"
+                                                       FontSize="18"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#512BD4"
+                                                       HorizontalOptions="End" />
+                                                <Label Text="{Binding PricePerMeal, StringFormat='~{0:F2} ETB / meal'}"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#388E3C"
+                                                       HorizontalOptions="End" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+
+                                        <!-- Plan Features Chips -->
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Border StrokeShape="RoundRectangle 8"
+                                                    BackgroundColor="#F3E5F5"
+                                                    StrokeThickness="0"
+                                                    Padding="8,4">
+                                                <Label Text="{Binding TotalCredits, StringFormat='🎫 {0} Meals'}"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#7B1FA2" />
+                                            </Border>
+
+                                            <Border StrokeShape="RoundRectangle 8"
+                                                    BackgroundColor="#E8F5E9"
+                                                    StrokeThickness="0"
+                                                    Padding="8,4">
+                                                <Label Text="{Binding ValidityDays, StringFormat='📅 {0} Days'}"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#2E7D32" />
+                                            </Border>
+
+                                            <Border StrokeShape="RoundRectangle 8"
+                                                    BackgroundColor="#E3F2FD"
+                                                    StrokeThickness="0"
+                                                    Padding="8,4">
+                                                <Label Text="🔄 Rollover Allowed"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#1565C0" />
+                                            </Border>
+                                        </HorizontalStackLayout>
+
+                                        <!-- Subscribe / Top-Up Action Button -->
+                                        <Button Text="Activate / Top-Up Pass"
+                                                BackgroundColor="#512BD4"
+                                                TextColor="White"
+                                                FontAttributes="Bold"
+                                                CornerRadius="10"
+                                                HeightRequest="44"
+                                                Margin="0,4,0,0"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MealPlansViewModel}}, Path=SubscribeCommand}"
+                                                CommandParameter="{Binding .}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <!-- Loading Activity Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy}"
+                                   Color="#512BD4"
+                                   HeightRequest="40"
+                                   WidthRequest="40"
+                                   HorizontalOptions="Center" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

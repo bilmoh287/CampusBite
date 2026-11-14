@@ -21,6 +21,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(FoodDetailsPage), typeof(FoodDetailsPage));
         Routing.RegisterRoute(nameof(CheckoutPage), typeof(CheckoutPage));
         Routing.RegisterRoute(nameof(OrderDetailsPage), typeof(OrderDetailsPage));
+        Routing.RegisterRoute(nameof(MealPlansPage), typeof(MealPlansPage));
 
         Loaded += OnAppShellLoaded;
     }
@@ -74,6 +75,7 @@ public partial class AppShell : Shell
         {
             CafesTab.IsVisible = false;
             CartTab.IsVisible = false;
+            PassesTab.IsVisible = false;
             OrdersTab.IsVisible = false;
             CourierTab.IsVisible = false;
             AdminTab.IsVisible = false;
@@ -86,6 +88,7 @@ public partial class AppShell : Shell
             case UserRole.Customer:
                 CafesTab.IsVisible = true;
                 CartTab.IsVisible = true;
+                PassesTab.IsVisible = true;
                 OrdersTab.IsVisible = true;
                 CourierTab.IsVisible = false;
                 AdminTab.IsVisible = false;
@@ -94,6 +97,7 @@ public partial class AppShell : Shell
             case UserRole.Courier:
                 CafesTab.IsVisible = false;
                 CartTab.IsVisible = false;
+                PassesTab.IsVisible = false;
                 OrdersTab.IsVisible = false;
                 CourierTab.IsVisible = true;
                 AdminTab.IsVisible = false;
@@ -102,6 +106,7 @@ public partial class AppShell : Shell
             case UserRole.CafeOwner:
                 CafesTab.IsVisible = false;
                 CartTab.IsVisible = false;
+                PassesTab.IsVisible = false;
                 OrdersTab.IsVisible = false;
                 CourierTab.IsVisible = false;
                 AdminTab.IsVisible = true;
@@ -110,6 +115,7 @@ public partial class AppShell : Shell
             case UserRole.Admin:
                 CafesTab.IsVisible = true;
                 CartTab.IsVisible = true;
+                PassesTab.IsVisible = true;
                 OrdersTab.IsVisible = true;
                 CourierTab.IsVisible = true;
                 AdminTab.IsVisible = true;

@@ -90,6 +90,26 @@
                     <Label Text="This café is currently closed. Browsing menu only." FontSize="12" FontAttributes="Bold" TextColor="#FFCDD2" VerticalOptions="Center"/>
                 </HorizontalStackLayout>
             </Border>
+
+            <!-- Dining Passes / Meal Subscription Banner -->
+            <Border BackgroundColor="#311B92"
+                    Stroke="#7C4DFF"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12,8"
+                    Margin="0,8,0,0">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavigateToMealPlansCommand}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                    <Label Grid.Column="0" Text="🍱" FontSize="16" VerticalOptions="Center" Margin="0,0,8,0"/>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Monthly &amp; 15-Day Dining Passes" FontSize="12" FontAttributes="Bold" TextColor="White" />
+                        <Label Text="Save up to 25% per meal • Rollover credits &amp; overdraft" FontSize="10" TextColor="#D1C4E9" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="2" Text="View Passes →" FontSize="11" FontAttributes="Bold" TextColor="#FFE082" VerticalOptions="Center" />
+                </Grid>
+            </Border>
         </VerticalStackLayout>
 
         <!-- Horizontal Category Filter Chips -->

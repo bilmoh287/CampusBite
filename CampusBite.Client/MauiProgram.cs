@@ -58,6 +58,7 @@ public static class MauiProgram
         builder.Services.AddTransient<OrderDetailsViewModel>();
         builder.Services.AddTransient<CafeAdminViewModel>();
         builder.Services.AddTransient<DeliveryRunnerViewModel>();
+        builder.Services.AddTransient<MealPlansViewModel>();
 
         // Register Views & App Navigation
         builder.Services.AddSingleton<AppShell>();
@@ -73,6 +74,7 @@ public static class MauiProgram
         builder.Services.AddTransient<OrderDetailsPage>();
         builder.Services.AddTransient<CafeAdminPage>();
         builder.Services.AddTransient<DeliveryRunnerPage>();
+        builder.Services.AddTransient<MealPlansPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

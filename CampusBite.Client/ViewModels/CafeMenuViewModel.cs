@@ -99,4 +99,12 @@ public partial class CafeMenuViewModel : ObservableObject
 
         await Shell.Current.GoToAsync(nameof(FoodDetailsPage), navigationParameter);
     }
+
+    [RelayCommand]
+    private async Task NavigateToMealPlansAsync()
+    {
+        if (Cafe == null) return;
+
+        await Shell.Current.GoToAsync($"{nameof(MealPlansPage)}?CafeId={Cafe.Id}");
+    }
 }
