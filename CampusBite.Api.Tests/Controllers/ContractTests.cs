@@ -186,4 +186,109 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         updated.AllowOverdraft.Should().BeTrue();
         updated.OverdraftLimit.Should().Be(5);
     }
+
+    [Fact]
+    public async Task Hybrid_Group_Order_With_Partial_Credits_Discounts_Covered_Items_And_Bills_Remainder_To_Cash()
+    {
+        // 1. Arrange: Manager creates a custom 2-meal pass
+        var managerClient = await CreateAuthenticatedClientAsync("manager@centralcafe.com", "Password123!");
+        var createPlanReq = new CreateContractPlanRequest
+        {
+            CafeId = 1,
+            Name = $"Group Hybrid Test Pass {Guid.NewGuid():N}",
+            Description = "2 Meals for Group Testing",
+            Price = 180.00m,
+            TotalCredits = 2,
+            ValidityDays = 7
+        };
+        var planCreateRes = await managerClient.PostAsJsonAsync("/api/contracts/plans", createPlanReq);
+        planCreateRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var createdPlan = (await planCreateRes.Content.ReadFromJsonAsync<ApiResponse<ContractPlanDto>>())!.Data!;
+
+        // 2. Student subscribes to this 2-meal pass
+        var studentClient = await CreateUniqueStudentClientAsync();
+        var subRes = await studentClient.PostAsJsonAsync("/api/contracts/subscribe", new SubscribeToPlanRequest { ContractPlanId = createdPlan.Id });
+        subRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var contract = (await subRes.Content.ReadFromJsonAsync<ApiResponse<StudentContractDto>>())!.Data!;
+        contract.RemainingCredits.Should().Be(2);
+
+        // 3. Act: Group order of 4 meals (e.g. 3 friends ordering on 1 phone)
+        // 4 x 220.00 ETB = 880.00 ETB subtotal, 15.00 ETB delivery fee
+        var groupOrderReq = new CreateOrderRequest
+        {
+            CafeId = 1,
+            DeliveryLocation = "Library Study Room 4",
+            PaymentMethod = PaymentMethod.MealContract,
+            SpecialNotes = "Group meal: 2 on pass, 2 in cash",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = 1, Quantity = 4 }
+            }
+        };
+
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", groupOrderReq);
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+
+        // 4. Assert Hybrid Math:
+        // - Subtotal = 880.00 ETB
+        // - Discount = 440.00 ETB (2 meals covered 100%)
+        // - Delivery Fee = 15.00 ETB
+        // - TotalAmount = (880 - 440) + 15 = 455.00 ETB
+        order.Subtotal.Should().Be(880.00m);
+        order.DiscountAmount.Should().Be(440.00m, "Only the 2 available credits must be discounted");
+        order.DeliveryFee.Should().Be(15.00m);
+        order.TotalAmount.Should().Be(455.00m, "Remaining 2 meals plus delivery fee must be billed to cash");
+
+        // 5. Assert: Student wallet balance dropped to 0 and contract marked Depleted
+        var walletRes = await studentClient.GetAsync("/api/contracts/my-contracts");
+        var myContracts = (await walletRes.Content.ReadFromJsonAsync<ApiResponse<List<StudentContractDto>>>())!.Data!;
+        var updatedContract = myContracts.First(c => c.Id == contract.Id);
+        updatedContract.RemainingCredits.Should().Be(0);
+        updatedContract.Status.Should().Be(ContractStatus.Depleted);
+    }
+
+    [Fact]
+    public async Task Order_With_Zero_Credits_And_No_Overdraft_Fails_Gracefully()
+    {
+        // 1. Arrange: Manager creates a 1-meal pass and student subscribes
+        var managerClient = await CreateAuthenticatedClientAsync("manager@centralcafe.com", "Password123!");
+        var createPlanReq = new CreateContractPlanRequest
+        {
+            CafeId = 1,
+            Name = $"1-Meal Depletion Pass {Guid.NewGuid():N}",
+            Price = 90.00m,
+            TotalCredits = 1,
+            ValidityDays = 7
+        };
+        var planRes = await managerClient.PostAsJsonAsync("/api/contracts/plans", createPlanReq);
+        var plan = (await planRes.Content.ReadFromJsonAsync<ApiResponse<ContractPlanDto>>())!.Data!;
+
+        var studentClient = await CreateUniqueStudentClientAsync();
+        await studentClient.PostAsJsonAsync("/api/contracts/subscribe", new SubscribeToPlanRequest { ContractPlanId = plan.Id });
+
+        // Use up the single credit
+        await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            DeliveryLocation = "Dorm",
+            PaymentMethod = PaymentMethod.MealContract,
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 1, Quantity = 1 } }
+        });
+
+        // 2. Act: Attempt to place another order with PaymentMethod.MealContract now that credits = 0
+        var failedOrderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            DeliveryLocation = "Dorm",
+            PaymentMethod = PaymentMethod.MealContract,
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 1, Quantity = 1 } }
+        });
+
+        // 3. Assert: Must fail with HTTP 400 Bad Request
+        failedOrderRes.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var result = await failedOrderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>();
+        result!.Success.Should().BeFalse();
+        result.Message.Should().Contain("depleted");
+    }
 }

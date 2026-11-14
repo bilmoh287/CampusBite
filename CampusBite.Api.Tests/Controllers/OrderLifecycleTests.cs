@@ -270,5 +270,49 @@ public class OrderLifecycleTests : IClassFixture<CustomWebApplicationFactory>
         // 3. Assert: Must fail validation with HTTP 400 Bad Request
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Cancelling_Pending_Order_Restores_Product_Inventory_Stock()
+    {
+        // 1. Arrange: Check initial stock quantity of product 1
+        var client = _factory.CreateClient();
+        var initialProdRes = await client.GetAsync("/api/products/1");
+        initialProdRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var initialProd = (await initialProdRes.Content.ReadFromJsonAsync<ApiResponse<ProductDto>>())!.Data!;
+        int initialStock = initialProd.StockQuantity ?? 0;
+        initialStock.Should().BeGreaterThan(3, "Test requires initial stock > 3");
+
+        // 2. Student places an order for 3 portions
+        var studentClient = await CreateAuthenticatedClientAsync("student@aau.edu.et", "Password123!");
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            DeliveryLocation = "Science Faculty Block B",
+            PaymentMethod = PaymentMethod.Cash,
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = 1, Quantity = 3 }
+            }
+        });
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+
+        // 3. Verify stock was deducted by 3
+        var midProdRes = await client.GetAsync("/api/products/1");
+        var midProd = (await midProdRes.Content.ReadFromJsonAsync<ApiResponse<ProductDto>>())!.Data!;
+        midProd.StockQuantity.Should().Be(initialStock - 3, "Stock must decrement upon order placement");
+
+        // 4. Act: Student cancels the pending order
+        var cancelRes = await studentClient.PatchAsJsonAsync($"/api/orders/{order.Id}/status", new UpdateOrderStatusRequest
+        {
+            NewStatus = OrderStatus.Cancelled
+        });
+        cancelRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 5. Assert: Stock is restored back to the initial quantity!
+        var restoredProdRes = await client.GetAsync("/api/products/1");
+        var restoredProd = (await restoredProdRes.Content.ReadFromJsonAsync<ApiResponse<ProductDto>>())!.Data!;
+        restoredProd.StockQuantity.Should().Be(initialStock, "Stock must be fully restored when pending order is cancelled");
+    }
 }
 
