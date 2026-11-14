@@ -14,5 +14,6 @@ public partial class DeliveryRunnerPage : ContentPage
     {
         base.OnAppearing();
         await _viewModel.LoadDeliveriesCommand.ExecuteAsync(null);
+        await _viewModel.StartCourierTrackingAsync();
     }
 }

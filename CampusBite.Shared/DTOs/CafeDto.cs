@@ -10,6 +10,7 @@ public class CafeDto
     public decimal DeliveryFee { get; set; }
     public decimal MinimumOrderAmount { get; set; }
     public bool IsActive { get; set; }
+    public string? Announcement { get; set; }
     public int? UniversityId { get; set; }
     public string? UniversityName { get; set; }
     public int OwnerId { get; set; }

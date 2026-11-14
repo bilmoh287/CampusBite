@@ -130,15 +130,18 @@ public class CafeAdminService : ICafeAdminService
         return response != null && response.Success;
     }
 
-    public Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
+    public async Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen)
     {
-        // Client-side state placeholder until Cafe update endpoint is invoked
-        return Task.FromResult(true);
+        var request = new ToggleCafeStatusRequest { IsOpen = isOpen };
+        var response = await _apiClient.PatchAsync<ToggleCafeStatusRequest, CafeDto>($"{ApiConstants.Cafes}/{cafeId}/status", request);
+        return response != null && response.Success;
     }
 
-    public Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement)
+    public async Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement)
     {
-        return Task.FromResult(true);
+        var request = new UpdateCafeAnnouncementRequest { Announcement = announcement };
+        var response = await _apiClient.PatchAsync<UpdateCafeAnnouncementRequest, CafeDto>($"{ApiConstants.Cafes}/{cafeId}/announcement", request);
+        return response != null && response.Success;
     }
 
     public Task<List<Expense>> GetCafeExpensesAsync(int cafeId)

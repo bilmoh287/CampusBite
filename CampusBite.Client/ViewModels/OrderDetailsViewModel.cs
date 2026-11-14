@@ -1,5 +1,6 @@
 using CampusBite.Models;
 using CampusBite.Services.Interfaces;
+using CampusBite.Shared.DTOs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,6 +11,7 @@ namespace CampusBite.ViewModels;
 public partial class OrderDetailsViewModel : ObservableObject
 {
     private readonly IOrderService _orderService;
+    private readonly IOrderHubService _orderHubService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ItemCount))]
@@ -132,9 +134,38 @@ public partial class OrderDetailsViewModel : ObservableObject
         _ => "Updates appear as kitchen staff advances your ticket."
     };
 
-    public OrderDetailsViewModel(IOrderService orderService)
+    public OrderDetailsViewModel(IOrderService orderService, IOrderHubService orderHubService)
     {
         _orderService = orderService;
+        _orderHubService = orderHubService;
+        _orderHubService.OrderStatusChanged += OnLiveOrderStatusChanged;
+    }
+
+    private void OnLiveOrderStatusChanged(OrderDto dto)
+    {
+        int currentId = Order?.Id ?? OrderId;
+        if (currentId > 0 && dto.Id == currentId)
+        {
+            _ = LoadOrderByIdAsync(dto.Id);
+        }
+    }
+
+    public async Task StartLiveTrackingAsync()
+    {
+        int targetId = Order?.Id ?? OrderId;
+        if (targetId > 0)
+        {
+            await _orderHubService.JoinOrderGroupAsync(targetId);
+        }
+    }
+
+    public async Task StopLiveTrackingAsync()
+    {
+        int targetId = Order?.Id ?? OrderId;
+        if (targetId > 0)
+        {
+            await _orderHubService.LeaveOrderGroupAsync(targetId);
+        }
     }
 
     partial void OnOrderIdChanged(int value)
@@ -142,6 +173,15 @@ public partial class OrderDetailsViewModel : ObservableObject
         if (value > 0)
         {
             _ = LoadOrderByIdAsync(value);
+            _ = StartLiveTrackingAsync();
+        }
+    }
+
+    partial void OnOrderChanged(Order? value)
+    {
+        if (value != null && value.Id > 0)
+        {
+            _ = StartLiveTrackingAsync();
         }
     }
 

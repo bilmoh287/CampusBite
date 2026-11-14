@@ -1,10 +1,12 @@
 using CampusBite.Api.Domain.Entities;
+using CampusBite.Api.Hubs;
 using CampusBite.Api.Infrastructure.Data;
 using CampusBite.Api.Services.Interfaces;
 using CampusBite.Shared.DTOs;
 using CampusBite.Shared.Enums;
 using CampusBite.Shared.Requests;
 using CampusBite.Shared.Responses;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusBite.Api.Services.Implementations;
@@ -13,11 +15,13 @@ public class OrderService : IOrderService
 {
     private readonly CampusBiteDbContext _context;
     private readonly ILogger<OrderService> _logger;
+    private readonly IHubContext<OrderHub> _hubContext;
 
-    public OrderService(CampusBiteDbContext context, ILogger<OrderService> logger)
+    public OrderService(CampusBiteDbContext context, ILogger<OrderService> logger, IHubContext<OrderHub> hubContext)
     {
         _context = context;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public async Task<ApiResponse<OrderDto>> CreateOrderAsync(int customerId, CreateOrderRequest request)
@@ -185,7 +189,20 @@ public class OrderService : IOrderService
 
         _logger.LogInformation("Order {OrderNumber} created successfully by Customer {CustomerId} at Cafe {CafeId}", order.OrderNumber, customerId, request.CafeId);
 
-        return await GetOrderByIdAsync(order.Id);
+        var createdResult = await GetOrderByIdAsync(order.Id);
+        if (createdResult.Success && createdResult.Data != null)
+        {
+            // 1. Live Push: Alert the Café Kitchen screen in real-time
+            await _hubContext.Clients.Group($"cafe_{order.CafeId}").SendAsync("OrderCreated", createdResult.Data);
+
+            // 2. Live Push: If delivery requested, alert available couriers
+            if (order.DeliveryFee > 0)
+            {
+                await _hubContext.Clients.Group("couriers").SendAsync("DeliveryAvailable", createdResult.Data);
+            }
+        }
+
+        return createdResult;
     }
 
     public async Task<ApiResponse<List<OrderDto>>> GetOrdersForCustomerAsync(int customerId)
@@ -307,7 +324,23 @@ public class OrderService : IOrderService
 
         _logger.LogInformation("Order {OrderNumber} status updated to {NewStatus} by User {UserId}", order.OrderNumber, newStatus, currentUserId);
 
-        return await GetOrderByIdAsync(orderId);
+        var updatedResult = await GetOrderByIdAsync(orderId);
+        if (updatedResult.Success && updatedResult.Data != null)
+        {
+            // 1. Live Push: Alert the student tracking this specific order
+            await _hubContext.Clients.Group($"order_{orderId}").SendAsync("OrderStatusChanged", updatedResult.Data);
+
+            // 2. Live Push: Alert the café staff / kitchen display
+            await _hubContext.Clients.Group($"cafe_{order.CafeId}").SendAsync("OrderUpdated", updatedResult.Data);
+
+            // 3. Live Push: If order is ready and is a delivery, alert couriers
+            if (newStatus == OrderStatus.ReadyForPickup && order.DeliveryFee > 0)
+            {
+                await _hubContext.Clients.Group("couriers").SendAsync("DeliveryAvailable", updatedResult.Data);
+            }
+        }
+
+        return updatedResult;
     }
 
     public async Task<ApiResponse<OrderDto>> ClaimOrderAsync(int orderId, int courierId)
@@ -330,7 +363,17 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
         _logger.LogInformation("Order {OrderNumber} claimed by Courier ID {CourierId}", order.OrderNumber, courierId);
 
-        return await GetOrderByIdAsync(orderId);
+        var claimedResult = await GetOrderByIdAsync(orderId);
+        if (claimedResult.Success && claimedResult.Data != null)
+        {
+            // 1. Live Push: Notify the student their order is on the way
+            await _hubContext.Clients.Group($"order_{orderId}").SendAsync("OrderStatusChanged", claimedResult.Data);
+
+            // 2. Live Push: Notify the café kitchen that courier has claimed the order
+            await _hubContext.Clients.Group($"cafe_{order.CafeId}").SendAsync("OrderUpdated", claimedResult.Data);
+        }
+
+        return claimedResult;
     }
 
     private static OrderDto MapToDto(Order o)

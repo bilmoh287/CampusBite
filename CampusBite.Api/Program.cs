@@ -1,5 +1,6 @@
 using CampusBite.Api.Authorization.Handlers;
 using CampusBite.Api.Authorization.Requirements;
+using CampusBite.Api.Hubs;
 using CampusBite.Api.Infrastructure.Data;
 using CampusBite.Api.Middlewares;
 using CampusBite.Api.Services.Implementations;
@@ -26,6 +27,7 @@ builder.Services.AddScoped<ICafeService, CafeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddSignalR();
 
 // 3. JWT Authentication (Layer 2)
 var jwtSecret = builder.Configuration["JwtSettings:Secret"] 
@@ -51,6 +53,21 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+
+    // Support SignalR WebSocket authentication via access_token query string
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -96,9 +113,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -191,6 +209,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<OrderHub>("/hubs/order");
 
 app.Run();
 

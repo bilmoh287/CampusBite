@@ -46,7 +46,7 @@ public class CafeService : ICafeService
             Location = dto.Location,
             IsOpen = dto.IsActive,
             ImageUrl = dto.LogoUrl ?? string.Empty,
-            Announcement = null
+            Announcement = dto.Announcement
         };
 
         if (dto.Products != null)

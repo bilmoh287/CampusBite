@@ -1,5 +1,6 @@
 using CampusBite.Api.Services.Interfaces;
 using CampusBite.Shared.DTOs;
+using CampusBite.Shared.Requests;
 using CampusBite.Shared.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +46,30 @@ public class CafesController : BaseApiController
         }
 
         var result = await _cafeService.GetCafesByOwnerAsync(CurrentUserId.Value);
+        return HandleResult(result);
+    }
+
+    [HttpPatch("{id}/announcement")]
+    [Authorize(Roles = "CafeOwner,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<CafeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CafeDto>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateAnnouncement(int id, [FromBody] UpdateCafeAnnouncementRequest request)
+    {
+        if (!CurrentUserId.HasValue) return Unauthorized();
+
+        var result = await _cafeService.UpdateAnnouncementAsync(id, request.Announcement, CurrentUserId.Value);
+        return HandleResult(result);
+    }
+
+    [HttpPatch("{id}/status")]
+    [Authorize(Roles = "CafeOwner,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<CafeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CafeDto>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ToggleStatus(int id, [FromBody] ToggleCafeStatusRequest request)
+    {
+        if (!CurrentUserId.HasValue) return Unauthorized();
+
+        var result = await _cafeService.ToggleStatusAsync(id, request.IsOpen, CurrentUserId.Value);
         return HandleResult(result);
     }
 }

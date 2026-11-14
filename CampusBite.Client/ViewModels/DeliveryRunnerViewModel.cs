@@ -1,8 +1,16 @@
+using System.Collections.ObjectModel;
+using CampusBite.Models;
+using CampusBite.Services.Interfaces;
+using CampusBite.Shared.DTOs;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 namespace CampusBite.ViewModels;
 
 public partial class DeliveryRunnerViewModel : ObservableObject
 {
     private readonly IDeliveryService _deliveryService;
+    private readonly IOrderHubService _orderHubService;
     private bool _isBusy;
 
     [ObservableProperty]
@@ -41,9 +49,27 @@ public partial class DeliveryRunnerViewModel : ObservableObject
     [ObservableProperty]
     private decimal _earningsToday;
 
-    public DeliveryRunnerViewModel(IDeliveryService deliveryService)
+    public DeliveryRunnerViewModel(IDeliveryService deliveryService, IOrderHubService orderHubService)
     {
         _deliveryService = deliveryService;
+        _orderHubService = orderHubService;
+        _orderHubService.DeliveryAvailable += OnDeliveryAvailable;
+        _orderHubService.OrderStatusChanged += OnOrderStatusChanged;
+    }
+
+    public async Task StartCourierTrackingAsync()
+    {
+        await _orderHubService.JoinCouriersGroupAsync();
+    }
+
+    private void OnDeliveryAvailable(OrderDto dto)
+    {
+        _ = LoadDeliveriesAsync();
+    }
+
+    private void OnOrderStatusChanged(OrderDto dto)
+    {
+        _ = LoadDeliveriesAsync();
     }
 
     [RelayCommand]

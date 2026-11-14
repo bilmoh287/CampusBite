@@ -1,8 +1,10 @@
 using CampusBite.Api.Domain.Entities;
+using CampusBite.Api.Hubs;
 using CampusBite.Api.Infrastructure.Data;
 using CampusBite.Api.Services.Interfaces;
 using CampusBite.Shared.DTOs;
 using CampusBite.Shared.Responses;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusBite.Api.Services.Implementations;
@@ -11,11 +13,13 @@ public class CafeService : ICafeService
 {
     private readonly CampusBiteDbContext _context;
     private readonly ILogger<CafeService> _logger;
+    private readonly IHubContext<OrderHub> _hubContext;
 
-    public CafeService(CampusBiteDbContext context, ILogger<CafeService> logger)
+    public CafeService(CampusBiteDbContext context, ILogger<CafeService> logger, IHubContext<OrderHub> hubContext)
     {
         _context = context;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public async Task<ApiResponse<List<CafeDto>>> GetCafesAsync(int? universityId, string? searchTerm)
@@ -83,6 +87,54 @@ public class CafeService : ICafeService
         return ApiResponse<List<CafeDto>>.SuccessResult(cafes);
     }
 
+    public async Task<ApiResponse<CafeDto>> UpdateAnnouncementAsync(int cafeId, string? announcement, int currentUserId)
+    {
+        var cafe = await _context.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
+        if (cafe == null)
+        {
+            return ApiResponse<CafeDto>.FailureResult("Café not found.");
+        }
+
+        if (cafe.OwnerId != currentUserId)
+        {
+            return ApiResponse<CafeDto>.FailureResult("You do not have permission to manage this café.");
+        }
+
+        cafe.Announcement = string.IsNullOrWhiteSpace(announcement) ? null : announcement.Trim();
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Café {CafeId} announcement updated by Owner {OwnerId}: '{Announcement}'", cafeId, currentUserId, cafe.Announcement);
+
+        // SignalR: Broadcast announcement update live to students & monitors viewing this cafe
+        await _hubContext.Clients.Group($"cafe_{cafeId}").SendAsync("AnnouncementUpdated", cafeId, cafe.Announcement);
+
+        return ApiResponse<CafeDto>.SuccessResult(MapToDto(cafe, false));
+    }
+
+    public async Task<ApiResponse<CafeDto>> ToggleStatusAsync(int cafeId, bool isOpen, int currentUserId)
+    {
+        var cafe = await _context.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
+        if (cafe == null)
+        {
+            return ApiResponse<CafeDto>.FailureResult("Café not found.");
+        }
+
+        if (cafe.OwnerId != currentUserId)
+        {
+            return ApiResponse<CafeDto>.FailureResult("You do not have permission to manage this café.");
+        }
+
+        cafe.IsActive = isOpen;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Café {CafeId} active/open status changed to {IsOpen} by Owner {OwnerId}", cafeId, isOpen, currentUserId);
+
+        // SignalR: Broadcast open/close status live to students & monitors viewing this cafe
+        await _hubContext.Clients.Group($"cafe_{cafeId}").SendAsync("CafeStatusChanged", cafeId, isOpen);
+
+        return ApiResponse<CafeDto>.SuccessResult(MapToDto(cafe, false));
+    }
+
     private static CafeDto MapToDto(Cafe c, bool includeMenu)
     {
         var dto = new CafeDto
@@ -95,6 +147,7 @@ public class CafeService : ICafeService
             DeliveryFee = c.DeliveryFee,
             MinimumOrderAmount = c.MinimumOrderAmount,
             IsActive = c.IsActive,
+            Announcement = c.Announcement,
             UniversityId = c.UniversityId,
             UniversityName = c.University?.Name,
             OwnerId = c.OwnerId,

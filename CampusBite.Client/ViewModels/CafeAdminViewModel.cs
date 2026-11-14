@@ -1,8 +1,17 @@
+using System.Collections.ObjectModel;
+using CampusBite.Models;
+using CampusBite.Services.Interfaces;
+using CampusBite.Shared.DTOs;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 namespace CampusBite.ViewModels;
 
 public partial class CafeAdminViewModel : ObservableObject
 {
     private readonly ICafeAdminService _adminService;
+    private readonly IOrderHubService _orderHubService;
+    private Cafe? _previousSelectedCafe;
 
     [ObservableProperty]
     private ObservableCollection<Cafe> _cafes = new();
@@ -94,15 +103,98 @@ public partial class CafeAdminViewModel : ObservableObject
     private bool _isBusy;
     private bool _isInitializing;
 
-    public CafeAdminViewModel(ICafeAdminService adminService)
+    public CafeAdminViewModel(ICafeAdminService adminService, IOrderHubService orderHubService)
     {
         _adminService = adminService;
+        _orderHubService = orderHubService;
+        _orderHubService.OrderCreated += OnLiveOrderCreated;
+        _orderHubService.OrderUpdated += OnLiveOrderUpdated;
+    }
+
+    private void OnLiveOrderCreated(OrderDto dto)
+    {
+        if (SelectedCafe == null || dto.CafeId != SelectedCafe.Id) return;
+
+        if (string.Equals(SelectedStatusFilter, "All", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(SelectedStatusFilter, dto.Status.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            var orderModel = MapDtoToOrder(dto);
+            IncomingOrders.Insert(0, orderModel);
+            IsEmpty = IncomingOrders.Count == 0;
+        }
+    }
+
+    private void OnLiveOrderUpdated(OrderDto dto)
+    {
+        if (SelectedCafe == null || dto.CafeId != SelectedCafe.Id) return;
+
+        var existing = IncomingOrders.FirstOrDefault(o => o.Id == dto.Id);
+        if (existing != null)
+        {
+            int index = IncomingOrders.IndexOf(existing);
+            if (index >= 0)
+            {
+                IncomingOrders[index] = MapDtoToOrder(dto);
+            }
+        }
+    }
+
+    private static Order MapDtoToOrder(OrderDto dto)
+    {
+        var order = new Order
+        {
+            Id = dto.Id,
+            CafeId = dto.CafeId,
+            OrderDate = dto.CreatedAt.ToLocalTime(),
+            TotalAmount = dto.TotalAmount,
+            Status = dto.Status.ToString(),
+            OrderType = dto.DeliveryFee > 0 ? "Delivery" : "Pickup",
+            DeliveryLocation = dto.DeliveryLocation,
+            Notes = dto.SpecialNotes,
+            CourierName = dto.CourierName,
+            Cafe = new Cafe
+            {
+                Id = dto.CafeId,
+                Name = dto.CafeName
+            }
+        };
+
+        if (dto.Items != null)
+        {
+            foreach (var item in dto.Items)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    Id = item.Id,
+                    OrderId = dto.Id,
+                    ProductId = item.ProductId ?? 0,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    Product = new Product
+                    {
+                        Id = item.ProductId ?? 0,
+                        Name = item.ProductName,
+                        Price = item.UnitPrice
+                    }
+                });
+            }
+        }
+
+        return order;
     }
 
     partial void OnSelectedCafeChanged(Cafe? value)
     {
+        if (_previousSelectedCafe != null && _previousSelectedCafe.Id != value?.Id)
+        {
+            _ = _orderHubService.LeaveCafeGroupAsync(_previousSelectedCafe.Id);
+        }
+
         if (value != null)
         {
+            _previousSelectedCafe = value;
+            _ = _orderHubService.JoinCafeGroupAsync(value.Id);
+
             _isCafeOpen = value.IsOpen;
             OnPropertyChanged(nameof(IsCafeOpen));
             AnnouncementText = value.Announcement ?? string.Empty;

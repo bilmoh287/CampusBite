@@ -11,6 +11,8 @@ namespace CampusBite.ViewModels;
 public partial class CafeMenuViewModel : ObservableObject
 {
     private readonly IProductService _productService;
+    private readonly IOrderHubService _orderHubService;
+    private Cafe? _previousCafe;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCafeClosed))]
@@ -31,15 +33,52 @@ public partial class CafeMenuViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
-    public CafeMenuViewModel(IProductService productService)
+    public CafeMenuViewModel(IProductService productService, IOrderHubService orderHubService)
     {
         _productService = productService;
+        _orderHubService = orderHubService;
+        _orderHubService.AnnouncementUpdated += OnLiveAnnouncementUpdated;
+        _orderHubService.CafeStatusChanged += OnLiveCafeStatusChanged;
+    }
+
+    private void OnLiveAnnouncementUpdated(int cafeId, string? announcement)
+    {
+        if (Cafe == null || Cafe.Id != cafeId) return;
+
+        Cafe.Announcement = announcement;
+        OnPropertyChanged(nameof(Cafe));
+        OnPropertyChanged(nameof(HasAnnouncement));
+        OnPropertyChanged(nameof(Announcement));
+    }
+
+    private void OnLiveCafeStatusChanged(int cafeId, bool isOpen)
+    {
+        if (Cafe == null || Cafe.Id != cafeId) return;
+
+        Cafe.IsOpen = isOpen;
+        OnPropertyChanged(nameof(Cafe));
+        OnPropertyChanged(nameof(IsCafeClosed));
+    }
+
+    public async Task StopLiveListeningAsync()
+    {
+        if (Cafe != null)
+        {
+            await _orderHubService.LeaveCafeGroupAsync(Cafe.Id);
+        }
     }
 
     partial void OnCafeChanged(Cafe? value)
     {
+        if (_previousCafe != null && _previousCafe.Id != value?.Id)
+        {
+            _ = _orderHubService.LeaveCafeGroupAsync(_previousCafe.Id);
+        }
+
         if (value != null)
         {
+            _previousCafe = value;
+            _ = _orderHubService.JoinCafeGroupAsync(value.Id);
             _ = LoadMenuAsync();
         }
     }

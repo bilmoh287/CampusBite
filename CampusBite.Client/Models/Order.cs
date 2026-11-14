@@ -15,6 +15,7 @@ public partial class Order : ObservableObject
     public string OrderType { get; set; } = "Pickup";
     public string? DeliveryLocation { get; set; }
     public string? Notes { get; set; }
+    public string? CourierName { get; set; }
 
     // Helper properties for XAML bindings
     public bool HasDeliveryLocation => !string.IsNullOrWhiteSpace(DeliveryLocation);

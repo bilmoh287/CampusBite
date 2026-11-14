@@ -24,4 +24,5 @@ public static class ApiConstants
     public const string Orders = "/api/orders";
     public const string Universities = "/api/universities";
     public const string Contracts = "/api/contracts";
+    public const string OrderHubUrl = "/hubs/order";
 }

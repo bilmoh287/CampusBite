@@ -16,5 +16,12 @@ public partial class OrderDetailsPage : ContentPage
     {
         base.OnAppearing();
         await _viewModel.RefreshOrderCommand.ExecuteAsync(null);
+        await _viewModel.StartLiveTrackingAsync();
+    }
+
+    protected override async void OnDisappearing()
+    {
+        base.OnDisappearing();
+        await _viewModel.StopLiveTrackingAsync();
     }
 }

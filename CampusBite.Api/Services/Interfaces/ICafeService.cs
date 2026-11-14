@@ -10,4 +10,6 @@ public interface ICafeService
     Task<ApiResponse<CafeDto>> GetCafeByIdAsync(int id);
     Task<Cafe?> GetCafeEntityByIdAsync(int id);
     Task<ApiResponse<List<CafeDto>>> GetCafesByOwnerAsync(int ownerId);
+    Task<ApiResponse<CafeDto>> UpdateAnnouncementAsync(int cafeId, string? announcement, int currentUserId);
+    Task<ApiResponse<CafeDto>> ToggleStatusAsync(int cafeId, bool isOpen, int currentUserId);
 }
