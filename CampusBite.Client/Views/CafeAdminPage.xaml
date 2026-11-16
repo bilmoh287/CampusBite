@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:CampusBite.ViewModels"
              xmlns:models="clr-namespace:CampusBite.Models"
              xmlns:dto="clr-namespace:CampusBite.DTOs"
+             xmlns:sharedDto="clr-namespace:CampusBite.Shared.DTOs;assembly=CampusBite.Shared"
              x:Class="CampusBite.Views.CafeAdminPage"
              x:DataType="vm:CafeAdminViewModel"
              Title="Staff Dashboard ⚙️"
@@ -142,71 +143,139 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- Section Switcher Tabs (Native Buttons for robust WinUI 3 pointer handling) -->
-                <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
-                    <!-- Live Orders Tab Button -->
-                    <Button Grid.Column="0"
-                            Text="🎫 Tickets"
-                            Command="{Binding SwitchSectionCommand}"
-                            CommandParameter="Orders"
-                            CornerRadius="8"
-                            FontAttributes="Bold"
-                            FontSize="12"
-                            HeightRequest="42">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="True">
-                                <Setter Property="BackgroundColor" Value="#FF9800"/>
-                                <Setter Property="TextColor" Value="Black"/>
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="False">
-                                <Setter Property="BackgroundColor" Value="#222222"/>
-                                <Setter Property="TextColor" Value="White"/>
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
+                <!-- Section Switcher Tabs (Scrollable Bar with Role Awareness) -->
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <HorizontalStackLayout Spacing="8">
+                        <!-- Live Orders Tab Button -->
+                        <Button Text="🎫 Tickets"
+                                Command="{Binding SwitchSectionCommand}"
+                                CommandParameter="Orders"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HeightRequest="40"
+                                Padding="14,0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                    <Setter Property="TextColor" Value="Black"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsOrdersSectionActive}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#222222"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
 
-                    <!-- Menu & Stock Tab Button -->
-                    <Button Grid.Column="1"
-                            Text="🍔 Stock"
-                            Command="{Binding SwitchSectionCommand}"
-                            CommandParameter="Stock"
-                            CornerRadius="8"
-                            FontAttributes="Bold"
-                            FontSize="12"
-                            HeightRequest="42">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="True">
-                                <Setter Property="BackgroundColor" Value="#FF9800"/>
-                                <Setter Property="TextColor" Value="Black"/>
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="False">
-                                <Setter Property="BackgroundColor" Value="#222222"/>
-                                <Setter Property="TextColor" Value="White"/>
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
+                        <!-- Fast Walk-In Pass Punch Tab Button -->
+                        <Button Text="🎟️ Punch"
+                                Command="{Binding SwitchSectionCommand}"
+                                CommandParameter="Counter"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HeightRequest="40"
+                                Padding="14,0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsCounterSectionActive}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#4CAF50"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsCounterSectionActive}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#222222"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
 
-                    <!-- Sales & Analytics Tab Button -->
-                    <Button Grid.Column="2"
-                            Text="📊 Sales"
-                            Command="{Binding SwitchSectionCommand}"
-                            CommandParameter="Sales"
-                            CornerRadius="8"
-                            FontAttributes="Bold"
-                            FontSize="12"
-                            HeightRequest="42">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding IsSalesSectionActive}" Value="True">
-                                <Setter Property="BackgroundColor" Value="#FF9800"/>
-                                <Setter Property="TextColor" Value="Black"/>
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding IsSalesSectionActive}" Value="False">
-                                <Setter Property="BackgroundColor" Value="#222222"/>
-                                <Setter Property="TextColor" Value="White"/>
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
-                </Grid>
+                        <!-- Menu & Stock Tab Button -->
+                        <Button Text="🍔 Stock"
+                                Command="{Binding SwitchSectionCommand}"
+                                CommandParameter="Stock"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HeightRequest="40"
+                                Padding="14,0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                    <Setter Property="TextColor" Value="Black"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsStockSectionActive}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#222222"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <!-- Staff Management Tab Button (Owner Only) -->
+                        <Button Text="👨‍🍳 Staff"
+                                Command="{Binding SwitchSectionCommand}"
+                                CommandParameter="Staff"
+                                IsVisible="{Binding IsOwner}"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HeightRequest="40"
+                                Padding="14,0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsStaffSectionActive}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#2196F3"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsStaffSectionActive}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#222222"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <!-- Subscription Plans Tab Button (Owner Only) -->
+                        <Button Text="🍱 Plans"
+                                Command="{Binding SwitchSectionCommand}"
+                                CommandParameter="Plans"
+                                IsVisible="{Binding IsOwner}"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HeightRequest="40"
+                                Padding="14,0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsPlansSectionActive}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#AB47BC"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsPlansSectionActive}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#222222"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <!-- Sales & Financials Tab Button (Owner Only) -->
+                        <Button Text="📊 Sales"
+                                Command="{Binding SwitchSectionCommand}"
+                                CommandParameter="Sales"
+                                IsVisible="{Binding IsOwner}"
+                                CornerRadius="8"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HeightRequest="40"
+                                Padding="14,0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsSalesSectionActive}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                    <Setter Property="TextColor" Value="Black"/>
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsSalesSectionActive}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="#222222"/>
+                                    <Setter Property="TextColor" Value="White"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </HorizontalStackLayout>
+                </ScrollView>
             </VerticalStackLayout>
         </Border>
 
@@ -886,6 +955,288 @@
                     </VerticalStackLayout>
                 </Border>
 
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- SECTION 4: Counter Walk-In Pass Punch (Tab 4) -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsCounterSectionActive}" Padding="16">
+            <VerticalStackLayout Spacing="16">
+                <!-- Info Header -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#4CAF50" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🎟️" FontSize="28" VerticalOptions="Center" Margin="0,0,12,0"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Fast Walk-In Pass Punch" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Student came with no phone? Search their @username and punch 1 meal in 2 seconds." FontSize="12" TextColor="#AAAAAA"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Student Search Bar -->
+                <Border BackgroundColor="#222222" StrokeThickness="1" Stroke="#444444" Padding="14,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                        <Entry Grid.Column="0"
+                               Text="{Binding CounterSearchTerm}"
+                               Placeholder="Search student by name or @username..."
+                               PlaceholderColor="#666666"
+                               TextColor="White"
+                               FontSize="14"
+                               VerticalOptions="Center"
+                               ReturnCommand="{Binding SearchStudentForPunchCommand}"/>
+                        <Button Grid.Column="1"
+                                Text="Search 🔍"
+                                Command="{Binding SearchStudentForPunchCommand}"
+                                BackgroundColor="#4CAF50"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                CornerRadius="8"
+                                Padding="16,0"
+                                HeightRequest="40"
+                                VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Search Results List -->
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding CounterSearchResults}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="sharedDto:UserSearchResultDto">
+                            <Border BackgroundColor="#2A2A2A" StrokeThickness="1" Stroke="#4CAF50" Padding="14">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10"/>
+                                </Border.StrokeShape>
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Label Text="{Binding FullName}" FontSize="15" FontAttributes="Bold" TextColor="White"/>
+                                            <Label Text="{Binding Username, StringFormat='@{0}'}" FontSize="13" TextColor="#FF9800" VerticalOptions="Center"/>
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding RemainingPassCredits, StringFormat='Active Pass: {0} meal credits remaining'}" FontSize="12" TextColor="#81C784"/>
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="1"
+                                            Text="Select 👤"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CafeAdminViewModel}}, Path=SelectStudentForPunchCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#388E3C"
+                                            TextColor="White"
+                                            FontAttributes="Bold"
+                                            FontSize="12"
+                                            CornerRadius="6"
+                                            Padding="12,4"
+                                            VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- Selected Student Action Card -->
+                <Border BackgroundColor="#1E281F"
+                        StrokeThickness="2"
+                        Stroke="#4CAF50"
+                        Padding="16"
+                        IsVisible="{Binding HasSelectedCounterStudent}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Selected Student" FontSize="13" FontAttributes="Bold" TextColor="#81C784"/>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="{Binding SelectedCounterStudent.FullName}" FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                                <Label Text="{Binding SelectedCounterStudent.Username, StringFormat='@{0}'}" FontSize="13" TextColor="#FF9800"/>
+                            </VerticalStackLayout>
+                            <Border Grid.Column="1" BackgroundColor="#0D3B18" StrokeThickness="0" Padding="10,4" VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8"/>
+                                </Border.StrokeShape>
+                                <Label Text="{Binding SelectedCounterStudent.RemainingPassCredits, StringFormat='{0} Credits Left'}" FontSize="13" FontAttributes="Bold" TextColor="#A5D6A7"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Optional Punch Notes -->
+                        <Border BackgroundColor="#141C15" StrokeThickness="1" Stroke="#2E5535" Padding="12,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding CounterPunchNotes}"
+                                   Placeholder="Optional note (e.g. Lunch Shiro plate)"
+                                   PlaceholderColor="#55775B"
+                                   TextColor="White"
+                                   FontSize="13"
+                                   VerticalOptions="Center"/>
+                        </Border>
+
+                        <!-- Big 1-Tap Punch Button -->
+                        <Button Text="🎟️ Punch 1 Meal Pass Now"
+                                Command="{Binding ExecuteCounterPunchCommand}"
+                                BackgroundColor="#4CAF50"
+                                TextColor="Black"
+                                FontAttributes="Bold"
+                                FontSize="15"
+                                CornerRadius="10"
+                                HeightRequest="48"/>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- SECTION 5: Staff Management (Owner Only) -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsStaffSectionActive}" Padding="16">
+            <VerticalStackLayout Spacing="16">
+                <!-- Info Header -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#2196F3" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="👨‍🍳" FontSize="28" VerticalOptions="Center" Margin="0,0,12,0"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Kitchen Staff &amp; Team Roster" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Onboard cooks directly from your phone. Enter their @username or email to assign them." FontSize="12" TextColor="#AAAAAA"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Quick Onboard Form Card -->
+                <Border BackgroundColor="#222222" StrokeThickness="1" Stroke="#333333" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Add Cook / Cashier to Kitchen" FontSize="14" FontAttributes="Bold" TextColor="#90CAF9"/>
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <Border Grid.Column="0" BackgroundColor="#161616" StrokeThickness="1" Stroke="#444444" Padding="12,0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8"/>
+                                </Border.StrokeShape>
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Label Grid.Column="0" Text="@" TextColor="#90CAF9" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" Margin="0,0,4,0"/>
+                                    <Entry Grid.Column="1"
+                                           Text="{Binding NewStaffUsername}"
+                                           Placeholder="staff_username or email"
+                                           PlaceholderColor="#666666"
+                                           TextColor="White"
+                                           FontSize="13"
+                                           VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <Button Grid.Column="1"
+                                    Text="Add Staff ➕"
+                                    Command="{Binding AddStaffMemberCommand}"
+                                    BackgroundColor="#2196F3"
+                                    TextColor="White"
+                                    FontAttributes="Bold"
+                                    FontSize="12"
+                                    CornerRadius="8"
+                                    Padding="14,0"
+                                    HeightRequest="42"
+                                    VerticalOptions="Center"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Current Staff List -->
+                <Label Text="Current Active Kitchen Staff" FontSize="15" FontAttributes="Bold" TextColor="White"/>
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding StaffMembers}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="sharedDto:UserDto">
+                            <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#333333" Padding="14">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10"/>
+                                </Border.StrokeShape>
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                                    <Border Grid.Column="0" StrokeShape="RoundRectangle 20" HeightRequest="40" WidthRequest="40" BackgroundColor="#1A334A" StrokeThickness="0">
+                                        <Label Text="👨‍🍳" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding FullName}" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                                        <Label Text="{Binding Username, StringFormat='@{0}'}" FontSize="12" TextColor="#90CAF9"/>
+                                        <Label Text="{Binding Email}" FontSize="11" TextColor="#888888"/>
+                                    </VerticalStackLayout>
+                                    <Border Grid.Column="2" BackgroundColor="#0D3B18" StrokeThickness="0" Padding="8,4" VerticalOptions="Center">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <Label Text="Kitchen Staff" FontSize="11" FontAttributes="Bold" TextColor="#81C784"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- SECTION 6: Subscription Plans & Base Credit (Owner Only) -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsPlansSectionActive}" Padding="16">
+            <VerticalStackLayout Spacing="16">
+                <!-- Info Header -->
+                <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#AB47BC" Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🍱" FontSize="28" VerticalOptions="Center" Margin="0,0,12,0"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Subscription Meal Passes" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                            <Label Text="Manage packages, meals per month, and the Base Meal Credit Value." FontSize="12" TextColor="#AAAAAA"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Plans List -->
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding ContractPlans}" Spacing="12">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="sharedDto:ContractPlanDto">
+                            <Border BackgroundColor="#1E1E1E" StrokeThickness="1" Stroke="#444444" Padding="16">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <VerticalStackLayout Spacing="8">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                            <Label Text="{Binding Description}" FontSize="12" TextColor="#AAAAAA"/>
+                                        </VerticalStackLayout>
+                                        <Border Grid.Column="1" BackgroundColor="#2E1B38" StrokeThickness="0" Padding="10,4" VerticalOptions="Center">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="{Binding Price, StringFormat='{0:F0} ETB'}" FontSize="14" FontAttributes="Bold" TextColor="#CE93D8"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Plan Metrics & Base Credit Box -->
+                                    <Border BackgroundColor="#252525" StrokeThickness="0" Padding="12" Margin="0,4,0,0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8"/>
+                                        </Border.StrokeShape>
+                                        <Grid ColumnDefinitions="*, *">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                <Label Text="Meal Credits" FontSize="11" TextColor="#888888"/>
+                                                <Label Text="{Binding TotalCredits, StringFormat='{0} Meals'}" FontSize="13" FontAttributes="Bold" TextColor="White"/>
+                                                <Label Text="{Binding PricePerMeal, StringFormat='~{0:F0} ETB / meal'}" FontSize="11" TextColor="#FF9800"/>
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                                <Label Text="Base Meal Credit Value" FontSize="11" TextColor="#888888"/>
+                                                <Label Text="{Binding BaseMealCreditValue, StringFormat='{0:F0} ETB'}" FontSize="13" FontAttributes="Bold" TextColor="#81C784"/>
+                                                <Label Text="Dishes above this pay diff" FontSize="10" TextColor="#AAAAAA"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
 

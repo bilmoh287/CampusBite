@@ -22,6 +22,9 @@ public partial class RegisterViewModel : ObservableObject
     private string _fullName = string.Empty;
 
     [ObservableProperty]
+    private string _username = string.Empty;
+
+    [ObservableProperty]
     private string _email = string.Empty;
 
     [ObservableProperty]
@@ -52,6 +55,17 @@ public partial class RegisterViewModel : ObservableObject
     {
         _authService = authService;
         _apiClient = apiClient;
+    }
+
+    partial void OnUsernameChanged(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return;
+
+        var cleaned = value.Replace("@", "").Replace(" ", "").ToLowerInvariant();
+        if (cleaned != value)
+        {
+            Username = cleaned;
+        }
     }
 
     partial void OnSelectedRoleChanged(string value)
@@ -98,6 +112,21 @@ public partial class RegisterViewModel : ObservableObject
             return;
         }
 
+        var cleanUsername = Username?.Trim().TrimStart('@').ToLowerInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(cleanUsername) || cleanUsername.Length < 3 || cleanUsername.Length > 20)
+        {
+            ErrorMessage = "Please enter a username (3-20 characters).";
+            HasError = true;
+            return;
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(cleanUsername, @"^[a-zA-Z0-9_]{3,20}$"))
+        {
+            ErrorMessage = "Username can only contain letters, numbers, and underscores (e.g. abebe_21).";
+            HasError = true;
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
         {
             ErrorMessage = "Please enter a valid email address.";
@@ -134,6 +163,7 @@ public partial class RegisterViewModel : ObservableObject
 
             var request = new RegisterRequest
             {
+                Username = cleanUsername,
                 FullName = FullName.Trim(),
                 Email = Email.Trim(),
                 Password = Password,
@@ -159,6 +189,7 @@ public partial class RegisterViewModel : ObservableObject
                         await Shell.Current.GoToAsync("//DeliveryRunnerPage");
                         break;
                     case UserRole.CafeOwner:
+                    case UserRole.CafeStaff:
                         await Shell.Current.GoToAsync("//CafeAdminPage");
                         break;
                     default:

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CampusBite.Models;
 using CampusBite.Services.Interfaces;
+using CampusBite.Shared.DTOs;
 using CampusBite.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,6 +13,7 @@ public partial class CafeMenuViewModel : ObservableObject
 {
     private readonly IProductService _productService;
     private readonly IOrderHubService _orderHubService;
+    private readonly IContractService _contractService;
     private Cafe? _previousCafe;
 
     [ObservableProperty]
@@ -24,6 +26,15 @@ public partial class CafeMenuViewModel : ObservableObject
     public bool HasAnnouncement => !string.IsNullOrWhiteSpace(Cafe?.Announcement);
     public string Announcement => Cafe?.Announcement ?? string.Empty;
 
+    [ObservableProperty]
+    private StudentContractDto? _activeContract;
+
+    [ObservableProperty]
+    private bool _hasActivePass;
+
+    [ObservableProperty]
+    private string _passBannerText = string.Empty;
+
     public ObservableCollection<Product> Products { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
 
@@ -33,10 +44,14 @@ public partial class CafeMenuViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
-    public CafeMenuViewModel(IProductService productService, IOrderHubService orderHubService)
+    public CafeMenuViewModel(
+        IProductService productService, 
+        IOrderHubService orderHubService,
+        IContractService contractService)
     {
         _productService = productService;
         _orderHubService = orderHubService;
+        _contractService = contractService;
         _orderHubService.AnnouncementUpdated += OnLiveAnnouncementUpdated;
         _orderHubService.CafeStatusChanged += OnLiveCafeStatusChanged;
     }
@@ -103,11 +118,55 @@ public partial class CafeMenuViewModel : ObservableObject
                 }
             }
 
+            // Check for student active subscription at this café
+            try
+            {
+                ActiveContract = await _contractService.GetActiveContractForCafeAsync(Cafe.Id);
+                HasActivePass = ActiveContract != null && ActiveContract.RemainingCredits > 0 && ActiveContract.IsActive;
+                if (HasActivePass && ActiveContract != null)
+                {
+                    PassBannerText = $"🎟️ Active Pass: {ActiveContract.RemainingCredits} meals left (Base: {ActiveContract.BaseMealCreditValue:F0} ETB)";
+                }
+                else
+                {
+                    PassBannerText = string.Empty;
+                }
+            }
+            catch
+            {
+                HasActivePass = false;
+                PassBannerText = string.Empty;
+            }
+
             // Load Products for current selected category
             var productList = await _productService.GetProductsByCafeIdAsync(Cafe.Id, SelectedCategory);
             Products.Clear();
             foreach (var product in productList)
             {
+                if (HasActivePass && ActiveContract != null)
+                {
+                    product.HasActivePass = true;
+                    if (product.Price <= ActiveContract.BaseMealCreditValue)
+                    {
+                        product.IsPassCovered = true;
+                        product.IsPassUpgrade = false;
+                        product.UpgradeDifference = 0;
+                    }
+                    else
+                    {
+                        product.IsPassCovered = false;
+                        product.IsPassUpgrade = true;
+                        product.UpgradeDifference = product.Price - ActiveContract.BaseMealCreditValue;
+                    }
+                }
+                else
+                {
+                    product.HasActivePass = false;
+                    product.IsPassCovered = false;
+                    product.IsPassUpgrade = false;
+                    product.UpgradeDifference = 0;
+                }
+
                 Products.Add(product);
             }
         }

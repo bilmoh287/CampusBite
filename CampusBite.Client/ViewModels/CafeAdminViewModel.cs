@@ -11,6 +11,9 @@ public partial class CafeAdminViewModel : ObservableObject
 {
     private readonly ICafeAdminService _adminService;
     private readonly IOrderHubService _orderHubService;
+    private readonly IContractService _contractService;
+    private readonly IBuddyService _buddyService;
+    private readonly IAuthTokenStorage _tokenStorage;
     private Cafe? _previousSelectedCafe;
 
     [ObservableProperty]
@@ -20,14 +23,65 @@ public partial class CafeAdminViewModel : ObservableObject
     private Cafe? _selectedCafe;
 
     [ObservableProperty]
+    private bool _isOwner = true;
+
+    [ObservableProperty]
+    private bool _isStaff;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOrdersSectionActive))]
+    [NotifyPropertyChangedFor(nameof(IsCounterSectionActive))]
     [NotifyPropertyChangedFor(nameof(IsStockSectionActive))]
+    [NotifyPropertyChangedFor(nameof(IsStaffSectionActive))]
+    [NotifyPropertyChangedFor(nameof(IsPlansSectionActive))]
     [NotifyPropertyChangedFor(nameof(IsSalesSectionActive))]
     private string _activeSection = "Orders";
 
     public bool IsOrdersSectionActive => ActiveSection == "Orders";
+    public bool IsCounterSectionActive => ActiveSection == "Counter";
     public bool IsStockSectionActive => ActiveSection == "Stock";
+    public bool IsStaffSectionActive => ActiveSection == "Staff";
+    public bool IsPlansSectionActive => ActiveSection == "Plans";
     public bool IsSalesSectionActive => ActiveSection == "Sales";
+
+    // Counter Punch properties
+    [ObservableProperty]
+    private string _counterSearchTerm = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedCounterStudent))]
+    private UserSearchResultDto? _selectedCounterStudent;
+
+    public bool HasSelectedCounterStudent => SelectedCounterStudent != null;
+
+    [ObservableProperty]
+    private ObservableCollection<UserSearchResultDto> _counterSearchResults = new();
+
+    [ObservableProperty]
+    private Product? _selectedCounterProduct;
+
+    [ObservableProperty]
+    private string _counterPunchNotes = string.Empty;
+
+    [ObservableProperty]
+    private bool _isPunching;
+
+    [ObservableProperty]
+    private string? _counterPunchResult;
+
+    // Staff Management properties
+    [ObservableProperty]
+    private ObservableCollection<UserDto> _staffMembers = new();
+
+    [ObservableProperty]
+    private string _newStaffUsername = string.Empty;
+
+    [ObservableProperty]
+    private bool _isAddingStaff;
+
+    // Subscription Plans properties
+    [ObservableProperty]
+    private ObservableCollection<ContractPlanDto> _contractPlans = new();
 
     [ObservableProperty]
     private decimal _todayRevenue;
@@ -103,10 +157,18 @@ public partial class CafeAdminViewModel : ObservableObject
     private bool _isBusy;
     private bool _isInitializing;
 
-    public CafeAdminViewModel(ICafeAdminService adminService, IOrderHubService orderHubService)
+    public CafeAdminViewModel(
+        ICafeAdminService adminService, 
+        IOrderHubService orderHubService,
+        IContractService contractService,
+        IBuddyService buddyService,
+        IAuthTokenStorage tokenStorage)
     {
         _adminService = adminService;
         _orderHubService = orderHubService;
+        _contractService = contractService;
+        _buddyService = buddyService;
+        _tokenStorage = tokenStorage;
         _orderHubService.OrderCreated += OnLiveOrderCreated;
         _orderHubService.OrderUpdated += OnLiveOrderUpdated;
     }
@@ -267,10 +329,31 @@ public partial class CafeAdminViewModel : ObservableObject
             _isInitializing = true;
             IsRefreshing = true;
 
+            var userRole = await _tokenStorage.GetUserRoleAsync();
+            if (userRole == Shared.Enums.UserRole.CafeStaff)
+            {
+                IsStaff = true;
+                IsOwner = false;
+                if (ActiveSection == "Staff" || ActiveSection == "Plans" || ActiveSection == "Sales")
+                {
+                    ActiveSection = "Orders";
+                }
+            }
+            else
+            {
+                IsOwner = true;
+                IsStaff = false;
+            }
+
             var cafeList = await _adminService.GetCafesAsync();
             Cafes = new ObservableCollection<Cafe>(cafeList);
 
-            if (SelectedCafe == null && Cafes.Any())
+            var employedCafeId = await _tokenStorage.GetCafeIdAsync();
+            if (employedCafeId.HasValue && Cafes.Any(c => c.Id == employedCafeId.Value))
+            {
+                SelectedCafe = Cafes.First(c => c.Id == employedCafeId.Value);
+            }
+            else if (SelectedCafe == null && Cafes.Any())
             {
                 SelectedCafe = Cafes.First();
             }
@@ -335,9 +418,183 @@ public partial class CafeAdminViewModel : ObservableObject
         {
             await LoadOrdersInternalAsync();
         }
+        else if (ActiveSection == "Staff")
+        {
+            await LoadStaffMembersAsync();
+        }
+        else if (ActiveSection == "Plans")
+        {
+            await LoadContractPlansAsync();
+        }
         else if (ActiveSection == "Sales")
         {
             await ComputeSalesMetricsAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task SearchStudentForPunchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CounterSearchTerm) || SelectedCafe == null) return;
+
+        try
+        {
+            var results = await _buddyService.SearchStudentsAsync(CounterSearchTerm.Trim(), SelectedCafe.Id);
+            CounterSearchResults.Clear();
+            if (results != null && results.Success && results.Data != null)
+            {
+                foreach (var user in results.Data)
+                {
+                    CounterSearchResults.Add(user);
+                }
+            }
+
+            if (CounterSearchResults.Count == 1)
+            {
+                SelectedCounterStudent = CounterSearchResults[0];
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Search Error", ex.Message, "OK");
+        }
+    }
+
+    [RelayCommand]
+    public void SelectStudentForPunch(UserSearchResultDto student)
+    {
+        SelectedCounterStudent = student;
+    }
+
+    [RelayCommand]
+    public async Task ExecuteCounterPunchAsync()
+    {
+        if (SelectedCafe == null || SelectedCounterStudent == null || IsPunching) return;
+
+        bool confirm = await Shell.Current.DisplayAlertAsync(
+            "Confirm Pass Punch",
+            $"Deduct 1 meal credit from @{SelectedCounterStudent.Username}'s pass?",
+            "Punch Meal (-1)",
+            "Cancel");
+
+        if (!confirm) return;
+
+        try
+        {
+            IsPunching = true;
+            var request = new Shared.Requests.CounterPunchRequest
+            {
+                Username = SelectedCounterStudent.Username,
+                ProductId = SelectedCounterProduct?.Id,
+                Notes = string.IsNullOrWhiteSpace(CounterPunchNotes) ? "Walk-in pass punch by counter staff" : CounterPunchNotes.Trim()
+            };
+
+            var response = await _adminService.CounterPunchPassAsync(SelectedCafe.Id, request);
+            if (response != null && response.Success && response.Data != null)
+            {
+                CounterPunchResult = $"✅ Punched 1 meal for @{SelectedCounterStudent.Username}. Ticket #{response.Data.OrderNumber} created.";
+                await Shell.Current.DisplayAlertAsync(
+                    "Meal Punched! 🎟️",
+                    $"Successfully deducted 1 meal credit from @{SelectedCounterStudent.Username}.\nTicket #{response.Data.OrderNumber} created for kitchen.",
+                    "Done");
+
+                // Reset
+                SelectedCounterStudent = null;
+                CounterSearchTerm = string.Empty;
+                CounterSearchResults.Clear();
+                CounterPunchNotes = string.Empty;
+                await LoadAdminDataAsync();
+            }
+            else
+            {
+                await Shell.Current.DisplayAlertAsync("Punch Failed", response?.Message ?? "Could not punch pass.", "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Error", ex.Message, "OK");
+        }
+        finally
+        {
+            IsPunching = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task LoadStaffMembersAsync()
+    {
+        if (SelectedCafe == null || !IsOwner) return;
+
+        try
+        {
+            var response = await _adminService.GetStaffMembersAsync(SelectedCafe.Id);
+            StaffMembers.Clear();
+            if (response != null && response.Success && response.Data != null)
+            {
+                foreach (var staff in response.Data)
+                {
+                    StaffMembers.Add(staff);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Staff] Failed to load staff: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    public async Task AddStaffMemberAsync()
+    {
+        if (SelectedCafe == null || string.IsNullOrWhiteSpace(NewStaffUsername) || IsAddingStaff) return;
+
+        var clean = NewStaffUsername.Trim().TrimStart('@');
+        try
+        {
+            IsAddingStaff = true;
+            var response = await _adminService.AddStaffMemberAsync(SelectedCafe.Id, clean);
+            if (response != null && response.Success && response.Data != null)
+            {
+                await Shell.Current.DisplayAlertAsync(
+                    "Staff Added! 👨‍🍳",
+                    $"@{response.Data.Username} ({response.Data.FullName}) is now assigned as kitchen staff for {SelectedCafe.Name}.\nThey can log in immediately.",
+                    "OK");
+
+                NewStaffUsername = string.Empty;
+                await LoadStaffMembersAsync();
+            }
+            else
+            {
+                await Shell.Current.DisplayAlertAsync("Failed", response?.Message ?? "User not found or could not be added.", "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Error", ex.Message, "OK");
+        }
+        finally
+        {
+            IsAddingStaff = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task LoadContractPlansAsync()
+    {
+        if (SelectedCafe == null || !IsOwner) return;
+
+        try
+        {
+            var plans = await _contractService.GetPlansByCafeAsync(SelectedCafe.Id);
+            ContractPlans.Clear();
+            foreach (var plan in plans)
+            {
+                ContractPlans.Add(plan);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Plans] Failed to load plans: {ex.Message}");
         }
     }
 

@@ -43,6 +43,7 @@ public static class MauiProgram
         builder.Services.AddTransient<ICafeAdminService, CafeAdminService>();
         builder.Services.AddTransient<IDeliveryService, DeliveryService>();
         builder.Services.AddTransient<IContractService, ContractService>();
+        builder.Services.AddTransient<IBuddyService, BuddyService>();
         builder.Services.AddSingleton<IOrderHubService, OrderHubService>(); // Real-Time WebSocket Hub Service
         builder.Services.AddSingleton<ICartService, CartService>(); // Singleton state manager!
 

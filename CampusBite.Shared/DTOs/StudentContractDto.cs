@@ -13,6 +13,7 @@ public class StudentContractDto
     public string CafeName { get; set; } = string.Empty;
     public int TotalCredits { get; set; }
     public int RemainingCredits { get; set; }
+    public decimal BaseMealCreditValue { get; set; } = 130.00m;
     public int UsedCredits => TotalCredits - RemainingCredits;
 
     // Debt / Overdraft tab properties

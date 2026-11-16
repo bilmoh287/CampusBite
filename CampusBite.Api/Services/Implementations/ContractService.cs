@@ -260,6 +260,7 @@ public class ContractService : IContractService
             CafeName = contract.ContractPlan?.Cafe?.Name ?? string.Empty,
             TotalCredits = contract.TotalCredits,
             RemainingCredits = contract.RemainingCredits,
+            BaseMealCreditValue = contract.ContractPlan?.BaseMealCreditValue ?? 130.00m,
             AllowOverdraft = contract.AllowOverdraft,
             OverdraftLimit = contract.OverdraftLimit,
             Status = contract.Status,

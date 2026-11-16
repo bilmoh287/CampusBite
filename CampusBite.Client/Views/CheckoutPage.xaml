@@ -199,22 +199,104 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <!-- Items Review Summary -->
+                <!-- Table Buddies & Pass Split Card (Visible for 2+ items or Meal Pass) -->
+                <Border BackgroundColor="#1A2130"
+                        StrokeThickness="1"
+                        Stroke="#3F51B5"
+                        Padding="14"
+                        IsVisible="{Binding HasGroupOrder}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Label Grid.Column="0" Text="👥" FontSize="20" VerticalOptions="Center" Margin="0,0,10,0"/>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Dining Buddies &amp; Multi-Pass Split" FontSize="14" FontAttributes="Bold" TextColor="#90CAF9"/>
+                                <Label Text="Tag friends at your table. Their active passes will deduct 1 meal each." FontSize="11" TextColor="#B0BEC5"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Add Buddy Tag Input -->
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                            <Border Grid.Column="0" BackgroundColor="#111822" StrokeThickness="1" Stroke="#455A64" Padding="10,0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8"/>
+                                </Border.StrokeShape>
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Label Grid.Column="0" Text="@" TextColor="#90CAF9" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" Margin="0,0,4,0"/>
+                                    <Entry Grid.Column="1" 
+                                           Text="{Binding BuddySearchInput}" 
+                                           Placeholder="friend_username" 
+                                           PlaceholderColor="#607D8B" 
+                                           TextColor="White" 
+                                           FontSize="13" 
+                                           VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <Button Grid.Column="1"
+                                    Text="Tag Friend ➕"
+                                    Command="{Binding AddCoDinerCommand}"
+                                    IsEnabled="{Binding CanAddMoreCoDiners}"
+                                    BackgroundColor="#2196F3"
+                                    TextColor="White"
+                                    FontAttributes="Bold"
+                                    FontSize="11"
+                                    CornerRadius="8"
+                                    Padding="12,0"
+                                    HeightRequest="38"/>
+                        </Grid>
+
+                        <!-- Tagged Co-Diners Chips List -->
+                        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding SelectedCoDinerUsernames}" Spacing="6">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border BackgroundColor="#0D47A1" StrokeThickness="1" Stroke="#64B5F6" Padding="10,4">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="14"/>
+                                        </Border.StrokeShape>
+                                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                            <Label Text="{Binding StringFormat='@{0}'}" FontSize="12" FontAttributes="Bold" TextColor="White" VerticalOptions="Center"/>
+                                            <Button Text="✕"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CheckoutViewModel}}, Path=RemoveCoDinerCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="#FF8A80"
+                                                    FontAttributes="Bold"
+                                                    FontSize="11"
+                                                    Padding="0"
+                                                    HeightRequest="20"
+                                                    WidthRequest="20"
+                                                    VerticalOptions="Center"/>
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Items Review Summary & Smart Pass Split Breakdown -->
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Items Summary" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
+                    <Label Text="Smart Bill &amp; Upgrade Breakdown" FontSize="16" FontAttributes="Bold" TextColor="#FF9800"/>
                     <Border BackgroundColor="#1E1E1E" StrokeThickness="0" Padding="16">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="12"/>
                         </Border.StrokeShape>
                         <VerticalStackLayout Spacing="12">
-                            <!-- Items List -->
-                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding CartItems}" Spacing="4">
+
+                            <!-- Individual Dish Coverage Breakdown -->
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding SplitCoverageDetails}" Spacing="8">
                                 <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="models:CartItem">
-                                        <Grid ColumnDefinitions="*, Auto, Auto" Padding="0,6" ColumnSpacing="12">
-                                            <Label Grid.Column="0" Text="{Binding Product.Name}" FontSize="14" TextColor="White" VerticalOptions="Center"/>
-                                            <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}" FontSize="14" TextColor="#AAAAAA" VerticalOptions="Center"/>
-                                            <Label Grid.Column="2" Text="{Binding TotalPrice, StringFormat='{0:F2} ETB'}" FontSize="14" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
+                                    <DataTemplate x:DataType="viewmodels:OrderCoverDetail">
+                                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" RowSpacing="2">
+                                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding ItemName}" FontSize="14" FontAttributes="Bold" TextColor="White"/>
+                                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding StatusBadge}" FontSize="13" FontAttributes="Bold" TextColor="#81C784"/>
+                                            <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="6">
+                                                <Label Text="{Binding UnitPrice, StringFormat='Price: {0:F0} ETB •'}" FontSize="11" TextColor="#888888"/>
+                                                <Label Text="{Binding CoveredBy, StringFormat='Covered by: {0}'}" FontSize="11" FontAttributes="Italic" TextColor="#CE93D8"/>
+                                            </HorizontalStackLayout>
                                         </Grid>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
@@ -224,17 +306,17 @@
 
                             <!-- Bill Breakdown -->
                             <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="6">
-                                <Label Grid.Row="0" Grid.Column="0" Text="Subtotal" FontSize="13" TextColor="#AAAAAA"/>
+                                <Label Grid.Row="0" Grid.Column="0" Text="Subtotal (Menu Value)" FontSize="13" TextColor="#AAAAAA"/>
                                 <Label Grid.Row="0" Grid.Column="1" Text="{Binding Subtotal, StringFormat='{0:F2} ETB'}" FontSize="13" TextColor="White"/>
 
                                 <!-- Meal Pass Discount Row -->
-                                <Label Grid.Row="1" Grid.Column="0" Text="Meal Contract Discount" FontSize="13" TextColor="#81C784" IsVisible="{Binding HasDiscount}"/>
+                                <Label Grid.Row="1" Grid.Column="0" Text="Pass Credits Applied" FontSize="13" TextColor="#81C784" IsVisible="{Binding HasDiscount}"/>
                                 <Label Grid.Row="1" Grid.Column="1" Text="{Binding DiscountAmount, StringFormat='-{0:F2} ETB'}" FontSize="13" FontAttributes="Bold" TextColor="#81C784" IsVisible="{Binding HasDiscount}"/>
 
                                 <Label Grid.Row="2" Grid.Column="0" Text="Delivery Fee" FontSize="13" TextColor="#AAAAAA"/>
                                 <Label Grid.Row="2" Grid.Column="1" Text="{Binding DeliveryFee, StringFormat='{0:F2} ETB'}" FontSize="13" TextColor="White"/>
 
-                                <Label Grid.Row="3" Grid.Column="0" Text="Total Amount Due" FontSize="16" FontAttributes="Bold" TextColor="White"/>
+                                <Label Grid.Row="3" Grid.Column="0" Text="Total Cash Due" FontSize="16" FontAttributes="Bold" TextColor="White"/>
                                 <Label Grid.Row="3" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='{0:F2} ETB'}" FontSize="18" FontAttributes="Bold" TextColor="#FF9800"/>
                             </Grid>
                         </VerticalStackLayout>

@@ -20,6 +20,15 @@ public class Product
     public bool IsLowStock => IsAvailable && StockQuantity.HasValue && StockQuantity.Value <= LowStockThreshold && StockQuantity.Value > 0;
     public string StockDisplay => StockQuantity.HasValue ? $"{StockQuantity.Value} left" : (IsAvailable ? "In Stock" : "Sold Out");
 
+    // Dynamic Pass Eligibility properties for UI
+    public bool HasActivePass { get; set; }
+    public bool IsPassCovered { get; set; }
+    public bool IsPassUpgrade { get; set; }
+    public decimal UpgradeDifference { get; set; }
+    public string PassBadgeText => IsPassCovered 
+        ? "🎟️ Pass Covered" 
+        : (IsPassUpgrade ? $"🎟️ Pass + {UpgradeDifference:F0} ETB" : string.Empty);
+
     // Navigation property
     public Cafe? Cafe { get; set; }
 }

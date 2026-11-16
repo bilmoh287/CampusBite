@@ -10,6 +10,7 @@ public interface IOrderHubService
     event Action<OrderDto>? OrderUpdated;
     event Action<int, string?>? AnnouncementUpdated;
     event Action<int, bool>? CafeStatusChanged;
+    event Action<PassDeductionAlertDto>? PassDeductionAlertReceived;
 
     Task EnsureConnectedAsync();
     Task DisconnectAsync();

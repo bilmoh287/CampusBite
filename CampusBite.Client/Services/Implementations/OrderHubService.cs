@@ -21,6 +21,7 @@ public class OrderHubService : IOrderHubService, IAsyncDisposable
     public event Action<OrderDto>? OrderUpdated;
     public event Action<int, string?>? AnnouncementUpdated;
     public event Action<int, bool>? CafeStatusChanged;
+    public event Action<PassDeductionAlertDto>? PassDeductionAlertReceived;
 
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
@@ -114,6 +115,30 @@ public class OrderHubService : IOrderHubService, IAsyncDisposable
         _connection.On<int, bool>("CafeStatusChanged", (cafeId, isOpen) =>
         {
             MainThread.BeginInvokeOnMainThread(() => CafeStatusChanged?.Invoke(cafeId, isOpen));
+        });
+
+        _connection.On<PassDeductionAlertDto>("PassDeductedForGroupOrder", (alert) =>
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                PassDeductionAlertReceived?.Invoke(alert);
+                _ = Shell.Current?.DisplayAlertAsync(
+                    "🎟️ Meal Pass Used!",
+                    $"{alert.HostName ?? "A friend"} tagged you for group dining at {alert.CafeName}.\n1 meal pass credit deducted (Ticket: #{alert.OrderNumber}).\nRemaining meals: {alert.RemainingCredits}",
+                    "OK");
+            });
+        });
+
+        _connection.On<PassDeductionAlertDto>("PassDeductedForWalkIn", (alert) =>
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                PassDeductionAlertReceived?.Invoke(alert);
+                _ = Shell.Current?.DisplayAlertAsync(
+                    "🎟️ Counter Pass Punched!",
+                    $"1 meal credit was punched at {alert.CafeName} counter for {alert.MealName ?? "Meal"}.\nRemaining meals: {alert.RemainingCredits}",
+                    "OK");
+            });
         });
 
         _connection.Reconnected += async (connectionId) =>

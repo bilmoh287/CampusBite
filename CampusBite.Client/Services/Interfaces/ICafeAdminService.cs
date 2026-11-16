@@ -1,3 +1,8 @@
+using CampusBite.Models;
+using CampusBite.Shared.DTOs;
+using CampusBite.Shared.Requests;
+using CampusBite.Shared.Responses;
+
 namespace CampusBite.Services.Interfaces;
 
 public interface ICafeAdminService
@@ -16,4 +21,9 @@ public interface ICafeAdminService
     Task<bool> DeleteExpenseAsync(int expenseId);
     Task<bool> AddProductAsync(Product product);
     Task<bool> DeleteProductAsync(int productId);
+
+    // Counter Punch & Staff Operations
+    Task<ApiResponse<OrderDto>?> CounterPunchPassAsync(int cafeId, CounterPunchRequest request);
+    Task<ApiResponse<UserDto>?> AddStaffMemberAsync(int cafeId, string staffUsername);
+    Task<ApiResponse<List<UserDto>>?> GetStaffMembersAsync(int cafeId);
 }

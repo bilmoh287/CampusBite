@@ -55,6 +55,7 @@ public partial class AppShell : Shell
                     await GoToAsync("//DeliveryRunnerPage");
                     break;
                 case UserRole.CafeOwner:
+                case UserRole.CafeStaff:
                     await GoToAsync("//CafeAdminPage");
                     break;
                 default:
@@ -104,6 +105,7 @@ public partial class AppShell : Shell
                 break;
 
             case UserRole.CafeOwner:
+            case UserRole.CafeStaff:
                 CafesTab.IsVisible = false;
                 CartTab.IsVisible = false;
                 PassesTab.IsVisible = false;

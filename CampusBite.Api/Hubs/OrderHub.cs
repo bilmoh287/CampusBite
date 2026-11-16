@@ -55,6 +55,13 @@ public class OrderHub : Hub
 
     public override async Task OnConnectedAsync()
     {
+        var userId = Context.UserIdentifier ?? Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+            _logger.LogInformation("Connection {ConnectionId} bound to user group user_{UserId}", Context.ConnectionId, userId);
+        }
+
         _logger.LogInformation("Client connected to OrderHub: {ConnectionId}, User: {User}", 
             Context.ConnectionId, Context.User?.Identity?.Name ?? "Anonymous");
         await base.OnConnectedAsync();

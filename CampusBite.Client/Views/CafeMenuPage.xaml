@@ -110,6 +110,23 @@
                     <Label Grid.Column="2" Text="View Passes →" FontSize="11" FontAttributes="Bold" TextColor="#FFE082" VerticalOptions="Center" />
                 </Grid>
             </Border>
+
+            <!-- Active Pass Status Banner -->
+            <Border IsVisible="{Binding HasActivePass}"
+                    BackgroundColor="#0F3820"
+                    Stroke="#4CAF50"
+                    StrokeThickness="1.5"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12,8"
+                    Margin="0,8,0,0">
+                <Grid ColumnDefinitions="Auto, *">
+                    <Label Grid.Column="0" Text="🎟️" FontSize="16" VerticalOptions="Center" Margin="0,0,8,0"/>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{Binding PassBannerText}" FontSize="12" FontAttributes="Bold" TextColor="#A5D6A7" />
+                        <Label Text="Eligible dishes are 100% covered • Premium dishes pay difference" FontSize="10" TextColor="#C8E6C9" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
         </VerticalStackLayout>
 
         <!-- Horizontal Category Filter Chips -->
@@ -203,13 +220,36 @@
                                     </VerticalStackLayout>
 
                                     <!-- Product Price & Availability Badge -->
-                                    <VerticalStackLayout Grid.Column="2" Spacing="6" VerticalOptions="Center" HorizontalOptions="End">
-                                        <Label Text="{Binding Price, StringFormat='${0:F2}'}" 
+                                    <VerticalStackLayout Grid.Column="2" Spacing="4" VerticalOptions="Center" HorizontalOptions="End">
+                                        <Label Text="{Binding Price, StringFormat='{0:F0} ETB'}" 
                                                FontSize="15" 
                                                FontAttributes="Bold" 
                                                TextColor="#1F1F1F" 
                                                HorizontalOptions="End" />
 
+                                        <!-- Pass 100% Covered Badge -->
+                                        <Border IsVisible="{Binding IsPassCovered}"
+                                                StrokeShape="RoundRectangle 8"
+                                                BackgroundColor="#E8F5E9"
+                                                Stroke="#81C784"
+                                                StrokeThickness="1"
+                                                Padding="6,2"
+                                                HorizontalOptions="End">
+                                            <Label Text="{Binding PassBadgeText}" FontSize="10" FontAttributes="Bold" TextColor="#2E7D32" />
+                                        </Border>
+
+                                        <!-- Pass Differential Upgrade Badge -->
+                                        <Border IsVisible="{Binding IsPassUpgrade}"
+                                                StrokeShape="RoundRectangle 8"
+                                                BackgroundColor="#FFF3E0"
+                                                Stroke="#FFB74D"
+                                                StrokeThickness="1"
+                                                Padding="6,2"
+                                                HorizontalOptions="End">
+                                            <Label Text="{Binding PassBadgeText}" FontSize="10" FontAttributes="Bold" TextColor="#E65100" />
+                                        </Border>
+
+                                        <!-- Availability Badge -->
                                         <Border StrokeShape="RoundRectangle 10" Padding="6,2" StrokeThickness="0" HorizontalOptions="End">
                                             <Border.Triggers>
                                                 <DataTrigger TargetType="Border" Binding="{Binding IsAvailable}" Value="True">

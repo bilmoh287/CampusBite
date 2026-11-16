@@ -4,6 +4,7 @@ using CampusBite.Services.Network;
 using CampusBite.Shared.DTOs;
 using CampusBite.Shared.Enums;
 using CampusBite.Shared.Requests;
+using CampusBite.Shared.Responses;
 
 namespace CampusBite.Services.Implementations;
 
@@ -229,6 +230,22 @@ public class CafeAdminService : ICafeAdminService
             ImageUrl = dto.ImageUrl ?? string.Empty,
             StockQuantity = dto.StockQuantity
         };
+    }
+
+    public async Task<ApiResponse<OrderDto>?> CounterPunchPassAsync(int cafeId, CounterPunchRequest request)
+    {
+        return await _apiClient.PostAsync<CounterPunchRequest, OrderDto>($"{ApiConstants.Cafes}/{cafeId}/counter-punch", request);
+    }
+
+    public async Task<ApiResponse<UserDto>?> AddStaffMemberAsync(int cafeId, string staffUsername)
+    {
+        var cleanUsername = staffUsername.Trim().TrimStart('@');
+        return await _apiClient.PostAsync<string, UserDto>($"{ApiConstants.Cafes}/{cafeId}/staff", cleanUsername);
+    }
+
+    public async Task<ApiResponse<List<UserDto>>?> GetStaffMembersAsync(int cafeId)
+    {
+        return await _apiClient.GetAsync<List<UserDto>>($"{ApiConstants.Cafes}/{cafeId}/staff");
     }
 
     private static Order MapDtoToOrder(OrderDto dto)

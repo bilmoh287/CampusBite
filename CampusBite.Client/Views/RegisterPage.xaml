@@ -105,6 +105,41 @@
                         </Border>
                     </VerticalStackLayout>
 
+                    <!-- Username (@handle) -->
+                    <VerticalStackLayout Spacing="6">
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="Username"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#333333" />
+                            <Label Text="(used for meal pass &amp; dining circles)"
+                                   FontSize="11"
+                                   TextColor="#888888"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Border StrokeShape="RoundRectangle 8"
+                                Stroke="#CCCCCC"
+                                StrokeThickness="1"
+                                Padding="12,4">
+                            <Grid ColumnDefinitions="Auto, *">
+                                <Label Grid.Column="0"
+                                       Text="@"
+                                       TextColor="#512BD4"
+                                       FontAttributes="Bold"
+                                       FontSize="15"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,6,0" />
+                                <Entry Grid.Column="1"
+                                       Text="{Binding Username}"
+                                       TextColor="#1A1A1A"
+                                       PlaceholderColor="#888888"
+                                       Placeholder="abebe_21"
+                                       ClearButtonVisibility="WhileEditing"
+                                       FontSize="14" />
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+
                     <!-- Email -->
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Email Address"
