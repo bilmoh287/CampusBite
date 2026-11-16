@@ -47,6 +47,22 @@ public class ContractService : IContractService
             return ApiResponse<ContractPlanDto>.FailureResult("You do not have permission to create dining plans for this café.");
         }
 
+        // Auto-calculate smart default for BaseMealCreditValue if not provided by owner
+        decimal baseCreditValue;
+        if (request.BaseMealCreditValue.HasValue && request.BaseMealCreditValue.Value > 0)
+        {
+            baseCreditValue = request.BaseMealCreditValue.Value;
+        }
+        else
+        {
+            // Default: Highest available meal price in this cafe, or average price per meal
+            var maxMealPrice = await _context.Products
+                .Where(p => p.CafeId == request.CafeId && p.IsAvailable)
+                .MaxAsync(p => (decimal?)p.Price);
+
+            baseCreditValue = maxMealPrice ?? (request.TotalCredits > 0 ? Math.Round(request.Price / request.TotalCredits, 2) : 130.00m);
+        }
+
         var plan = new ContractPlan
         {
             CafeId = request.CafeId,
@@ -54,6 +70,7 @@ public class ContractService : IContractService
             Description = request.Description?.Trim(),
             Price = request.Price,
             TotalCredits = request.TotalCredits,
+            BaseMealCreditValue = baseCreditValue,
             ValidityDays = request.ValidityDays,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -224,6 +241,7 @@ public class ContractService : IContractService
             Description = plan.Description,
             Price = plan.Price,
             TotalCredits = plan.TotalCredits,
+            BaseMealCreditValue = plan.BaseMealCreditValue,
             ValidityDays = plan.ValidityDays,
             IsActive = plan.IsActive
         };

@@ -24,4 +24,5 @@ public class OrderDto
     public DateTime? UpdatedAt { get; set; }
 
     public List<OrderItemDto> Items { get; set; } = new();
+    public List<CoDinerDto> CoDiners { get; set; } = new();
 }

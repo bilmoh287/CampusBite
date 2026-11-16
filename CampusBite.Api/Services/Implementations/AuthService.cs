@@ -37,7 +37,28 @@ public class AuthService : IAuthService
             return ApiResponse<AuthResponse>.FailureResult("An account with this email address already exists.");
         }
 
-        // 2. Validate University if provided
+        // 2. Validate & Assign Unique Username
+        string username;
+        if (!string.IsNullOrWhiteSpace(request.Username))
+        {
+            username = request.Username.Trim().ToLowerInvariant();
+            if (await _context.Users.AnyAsync(u => u.Username == username))
+            {
+                return ApiResponse<AuthResponse>.FailureResult("This username is already taken. Please choose another.");
+            }
+        }
+        else
+        {
+            var baseUser = emailNormalized.Split('@')[0].Replace(".", "_");
+            username = baseUser;
+            int suffix = 1;
+            while (await _context.Users.AnyAsync(u => u.Username == username))
+            {
+                username = $"{baseUser}{suffix++}";
+            }
+        }
+
+        // 3. Validate University if provided
         string? universityName = null;
         if (request.UniversityId.HasValue)
         {
@@ -55,6 +76,7 @@ public class AuthService : IAuthService
         // 4. Create User entity
         var user = new User
         {
+            Username = username,
             FullName = request.FullName.Trim(),
             Email = emailNormalized,
             PasswordHash = passwordHash,
@@ -242,12 +264,14 @@ public class AuthService : IAuthService
         return new UserDto
         {
             Id = user.Id,
+            Username = user.Username,
             FullName = user.FullName,
             Email = user.Email,
             Role = user.Role,
             PhoneNumber = user.PhoneNumber,
             UniversityId = user.UniversityId,
             UniversityName = universityName,
+            EmployedAtCafeId = user.EmployedAtCafeId,
             CreatedAt = user.CreatedAt
         };
     }

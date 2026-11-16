@@ -27,6 +27,9 @@ builder.Services.AddScoped<ICafeService, CafeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IUniversityService, UniversityService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IBuddyService, BuddyService>();
 builder.Services.AddSignalR();
 
 // 3. JWT Authentication (Layer 2)

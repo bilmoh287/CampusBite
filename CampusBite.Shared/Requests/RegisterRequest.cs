@@ -5,6 +5,9 @@ namespace CampusBite.Shared.Requests;
 
 public class RegisterRequest
 {
+    [RegularExpression(@"^[a-zA-Z0-9_]{3,20}$", ErrorMessage = "Username must be 3-20 characters long and can contain letters, numbers, and underscores.")]
+    public string? Username { get; set; }
+
     [Required(ErrorMessage = "Full name is required.")]
     [StringLength(100, MinimumLength = 2, ErrorMessage = "Full name must be between 2 and 100 characters.")]
     public string FullName { get; set; } = string.Empty;

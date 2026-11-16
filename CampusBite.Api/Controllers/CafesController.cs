@@ -72,4 +72,39 @@ public class CafesController : BaseApiController
         var result = await _cafeService.ToggleStatusAsync(id, request.IsOpen, CurrentUserId.Value);
         return HandleResult(result);
     }
+
+    [HttpPost("{id}/counter-punch")]
+    [Authorize(Roles = "CafeOwner,CafeStaff,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CounterPunch(int id, [FromBody] CounterPunchRequest request)
+    {
+        if (!CurrentUserId.HasValue) return Unauthorized();
+
+        var result = await _cafeService.CounterPunchPassAsync(id, request, CurrentUserId.Value);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{id}/staff")]
+    [Authorize(Roles = "CafeOwner,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AddStaff(int id, [FromBody] string staffUsername)
+    {
+        if (!CurrentUserId.HasValue) return Unauthorized();
+
+        var result = await _cafeService.AddStaffMemberAsync(id, staffUsername, CurrentUserId.Value);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id}/staff")]
+    [Authorize(Roles = "CafeOwner,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStaff(int id)
+    {
+        if (!CurrentUserId.HasValue) return Unauthorized();
+
+        var result = await _cafeService.GetStaffMembersAsync(id, CurrentUserId.Value);
+        return HandleResult(result);
+    }
 }

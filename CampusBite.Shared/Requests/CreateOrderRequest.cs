@@ -16,6 +16,8 @@ public class CreateOrderRequest
 
     public string? SpecialNotes { get; set; }
 
+    public List<string> CoDinerUsernames { get; set; } = new();
+
     [Required]
     [MinLength(1, ErrorMessage = "Order must contain at least one item.")]
     public List<CreateOrderItemRequest> Items { get; set; } = new();

@@ -20,6 +20,9 @@ public class CreateContractPlanRequest
     [Range(1, 365, ErrorMessage = "Total credits must be between 1 and 365.")]
     public int TotalCredits { get; set; }
 
+    [Range(0, 10000, ErrorMessage = "Base meal credit value must be non-negative.")]
+    public decimal? BaseMealCreditValue { get; set; }
+
     [Range(1, 365, ErrorMessage = "Validity days must be between 1 and 365.")]
     public int ValidityDays { get; set; } = 30;
 }
