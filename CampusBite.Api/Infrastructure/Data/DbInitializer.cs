@@ -44,6 +44,7 @@ public static class DbInitializer
                 new()
                 {
                     FullName = "Admin User",
+                    Username = "admin",
                     Email = "admin@campusbite.com",
                     PasswordHash = defaultPasswordHash,
                     Role = UserRole.Admin,
@@ -53,6 +54,7 @@ public static class DbInitializer
                 new()
                 {
                     FullName = "Cafe Manager",
+                    Username = "manager_central",
                     Email = "manager@centralcafe.com",
                     PasswordHash = defaultPasswordHash,
                     Role = UserRole.CafeOwner,
@@ -62,6 +64,7 @@ public static class DbInitializer
                 new()
                 {
                     FullName = "John Student",
+                    Username = "student_john",
                     Email = "student@aau.edu.et",
                     PasswordHash = defaultPasswordHash,
                     Role = UserRole.Student,
@@ -71,6 +74,7 @@ public static class DbInitializer
                 new()
                 {
                     FullName = "Swift Courier",
+                    Username = "swift_courier",
                     Email = "courier@campusbite.com",
                     PasswordHash = defaultPasswordHash,
                     Role = UserRole.Courier,
@@ -176,6 +180,7 @@ public static class DbInitializer
                     Description = "Includes 30 full lunch or dinner meals valid for 30 days. Perfect for daily dining.",
                     Price = 3200.00m,
                     TotalCredits = 30,
+                    BaseMealCreditValue = 130.00m,
                     ValidityDays = 30,
                     IsActive = true
                 },
@@ -186,6 +191,7 @@ public static class DbInitializer
                     Description = "Includes 60 meals with flexible rollover and trusted credit overdraft allowance.",
                     Price = 6000.00m,
                     TotalCredits = 60,
+                    BaseMealCreditValue = 130.00m,
                     ValidityDays = 90,
                     IsActive = true
                 }

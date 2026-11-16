@@ -18,6 +18,7 @@ public class Cafe
     // Navigation Properties
     public University? University { get; set; }
     public User Owner { get; set; } = null!;
+    public ICollection<User> StaffMembers { get; set; } = new List<User>();
     public ICollection<Category> Categories { get; set; } = new List<Category>();
     public ICollection<Product> Products { get; set; } = new List<Product>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();

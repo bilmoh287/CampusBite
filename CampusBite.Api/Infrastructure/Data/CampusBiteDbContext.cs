@@ -22,6 +22,8 @@ public class CampusBiteDbContext : DbContext
     public DbSet<ContractUsageLog> ContractUsageLogs => Set<ContractUsageLog>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<BuddyConnection> BuddyConnections => Set<BuddyConnection>();
+    public DbSet<OrderCoDiner> OrderCoDiners => Set<OrderCoDiner>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,11 +57,18 @@ public class CampusBiteDbContext : DbContext
         {
             entity.HasKey(u => u.Id);
             entity.HasIndex(u => u.Email).IsUnique();
+            entity.HasIndex(u => u.Username).IsUnique();
+            entity.Property(u => u.Username).IsRequired().HasMaxLength(50);
             entity.Property(u => u.FullName).IsRequired().HasMaxLength(100);
             entity.Property(u => u.Email).IsRequired().HasMaxLength(150);
             entity.Property(u => u.PasswordHash).IsRequired().HasMaxLength(255);
             entity.Property(u => u.PhoneNumber).HasMaxLength(20);
             entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30);
+
+            entity.HasOne(u => u.EmployedAtCafe)
+                  .WithMany(c => c.StaffMembers)
+                  .HasForeignKey(u => u.EmployedAtCafeId)
+                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasMany(u => u.OwnedCafes)
                   .WithOne(c => c.Owner)
@@ -196,6 +205,7 @@ public class CampusBiteDbContext : DbContext
             entity.HasKey(cp => cp.Id);
             entity.Property(cp => cp.Name).IsRequired().HasMaxLength(100);
             entity.Property(cp => cp.Price).HasPrecision(10, 2);
+            entity.Property(cp => cp.BaseMealCreditValue).HasPrecision(10, 2);
 
             entity.HasMany(cp => cp.StudentContracts)
                   .WithOne(sc => sc.ContractPlan)
@@ -249,6 +259,49 @@ public class CampusBiteDbContext : DbContext
                   .WithMany(u => u.RefreshTokens)
                   .HasForeignKey(rt => rt.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ====================================================================
+        // 13. BUDDY CONNECTION CONFIGURATION (Social Dining Circle)
+        // ====================================================================
+        modelBuilder.Entity<BuddyConnection>(entity =>
+        {
+            entity.HasKey(bc => bc.Id);
+            entity.HasIndex(bc => new { bc.RequesterId, bc.BuddyId }).IsUnique();
+
+            entity.HasOne(bc => bc.Requester)
+                  .WithMany(u => u.SentBuddyRequests)
+                  .HasForeignKey(bc => bc.RequesterId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(bc => bc.Buddy)
+                  .WithMany(u => u.ReceivedBuddyRequests)
+                  .HasForeignKey(bc => bc.BuddyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ====================================================================
+        // 14. ORDER CO-DINER CONFIGURATION (Multi-Student Pass Split)
+        // ====================================================================
+        modelBuilder.Entity<OrderCoDiner>(entity =>
+        {
+            entity.HasKey(cd => cd.Id);
+            entity.Property(cd => cd.UpgradeCashPortion).HasPrecision(10, 2);
+
+            entity.HasOne(cd => cd.Order)
+                  .WithMany(o => o.CoDiners)
+                  .HasForeignKey(cd => cd.OrderId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cd => cd.Student)
+                  .WithMany(u => u.CoDinerOrders)
+                  .HasForeignKey(cd => cd.StudentId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cd => cd.StudentContract)
+                  .WithMany()
+                  .HasForeignKey(cd => cd.StudentContractId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

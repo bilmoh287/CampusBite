@@ -26,4 +26,5 @@ public class Order
     public User? Courier { get; set; }
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public ICollection<ContractUsageLog> ContractUsageLogs { get; set; } = new List<ContractUsageLog>();
+    public ICollection<OrderCoDiner> CoDiners { get; set; } = new List<OrderCoDiner>();
 }

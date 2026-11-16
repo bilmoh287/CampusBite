@@ -113,6 +113,10 @@ namespace CampusBite.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("BaseMealCreditValue")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.Property<int>("CafeId")
                         .HasColumnType("int");
 
@@ -519,6 +523,9 @@ namespace CampusBite.Api.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<int?>("EmployedAtCafeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -541,14 +548,92 @@ namespace CampusBite.Api.Migrations
                     b.Property<int?>("UniversityId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("EmployedAtCafeId");
+
                     b.HasIndex("UniversityId");
 
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("CampusBite.Api.Domain.Entities.BuddyConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuddyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("RequesterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuddyId");
+
+                    b.HasIndex("RequesterId", "BuddyId")
+                        .IsUnique();
+
+                    b.ToTable("BuddyConnections");
+                });
+
+            modelBuilder.Entity("CampusBite.Api.Domain.Entities.OrderCoDiner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreditsDeducted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StudentContractId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UpgradeCashPortion")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("StudentContractId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("OrderCoDiners");
                 });
 
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.Cafe", b =>
@@ -714,12 +799,64 @@ namespace CampusBite.Api.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("CampusBite.Api.Domain.Entities.BuddyConnection", b =>
+                {
+                    b.HasOne("CampusBite.Api.Domain.Entities.User", "Buddy")
+                        .WithMany("ReceivedBuddyRequests")
+                        .HasForeignKey("BuddyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CampusBite.Api.Domain.Entities.User", "Requester")
+                        .WithMany("SentBuddyRequests")
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Buddy");
+
+                    b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("CampusBite.Api.Domain.Entities.OrderCoDiner", b =>
+                {
+                    b.HasOne("CampusBite.Api.Domain.Entities.Order", "Order")
+                        .WithMany("CoDiners")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CampusBite.Api.Domain.Entities.StudentContract", "StudentContract")
+                        .WithMany()
+                        .HasForeignKey("StudentContractId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("CampusBite.Api.Domain.Entities.User", "Student")
+                        .WithMany("CoDinerOrders")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("StudentContract");
+                });
+
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.User", b =>
                 {
+                    b.HasOne("CampusBite.Api.Domain.Entities.Cafe", "EmployedAtCafe")
+                        .WithMany("StaffMembers")
+                        .HasForeignKey("EmployedAtCafeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("CampusBite.Api.Domain.Entities.University", "University")
                         .WithMany("Users")
                         .HasForeignKey("UniversityId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("EmployedAtCafe");
 
                     b.Navigation("University");
                 });
@@ -735,6 +872,8 @@ namespace CampusBite.Api.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Products");
+
+                    b.Navigation("StaffMembers");
                 });
 
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.Category", b =>
@@ -749,6 +888,8 @@ namespace CampusBite.Api.Migrations
 
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.Order", b =>
                 {
+                    b.Navigation("CoDiners");
+
                     b.Navigation("ContractUsageLogs");
 
                     b.Navigation("OrderItems");
@@ -773,13 +914,19 @@ namespace CampusBite.Api.Migrations
 
             modelBuilder.Entity("CampusBite.Api.Domain.Entities.User", b =>
                 {
+                    b.Navigation("CoDinerOrders");
+
                     b.Navigation("CourierOrders");
 
                     b.Navigation("CustomerOrders");
 
                     b.Navigation("OwnedCafes");
 
+                    b.Navigation("ReceivedBuddyRequests");
+
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("SentBuddyRequests");
 
                     b.Navigation("StudentContracts");
                 });

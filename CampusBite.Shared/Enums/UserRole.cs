@@ -9,5 +9,6 @@ public enum UserRole
     CafeOwner = 1,
     Courier = 2,
     Admin = 3,
-    Customer = 4
+    Customer = 4,
+    CafeStaff = 5
 }

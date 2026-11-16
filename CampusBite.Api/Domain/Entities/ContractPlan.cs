@@ -8,6 +8,7 @@ public class ContractPlan
     public string? Description { get; set; }
     public decimal Price { get; set; }
     public int TotalCredits { get; set; }
+    public decimal BaseMealCreditValue { get; set; } = 130.00m;
     public int ValidityDays { get; set; } = 30;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
