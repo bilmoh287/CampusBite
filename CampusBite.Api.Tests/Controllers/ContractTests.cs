@@ -135,6 +135,7 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         var createRequest = new CreateOrderRequest
         {
             CafeId = 1,
+            OrderType = "Delivery",
             DeliveryLocation = "Engineering Dorm Block 3",
             PaymentMethod = PaymentMethod.MealContract,
             SpecialNotes = "Redeem my dining pass",
@@ -218,6 +219,7 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         var groupOrderReq = new CreateOrderRequest
         {
             CafeId = 1,
+            OrderType = "Delivery",
             DeliveryLocation = "Library Study Room 4",
             PaymentMethod = PaymentMethod.MealContract,
             SpecialNotes = "Group meal: 1 on pass, 1 in cash",

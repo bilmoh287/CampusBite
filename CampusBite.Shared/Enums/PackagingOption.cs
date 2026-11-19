@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace CampusBite.Shared.Enums;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum PackagingOption
 {
     StandardFree = 0,   // Plate (Dine-In), Festal / Paper wrap (Pickup/Delivery) - 0 ETB

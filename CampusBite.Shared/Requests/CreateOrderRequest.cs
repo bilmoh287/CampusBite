@@ -8,11 +8,10 @@ public class CreateOrderRequest
     [Required]
     public int CafeId { get; set; }
 
-    [Required(ErrorMessage = "Delivery location is required.")]
-    [StringLength(200, MinimumLength = 3, ErrorMessage = "Delivery location must be between 3 and 200 characters.")]
-    public string DeliveryLocation { get; set; } = string.Empty;
+    [StringLength(200, ErrorMessage = "Delivery location cannot exceed 200 characters.")]
+    public string? DeliveryLocation { get; set; }
 
-    public string OrderType { get; set; } = "DineIn";
+    public string? OrderType { get; set; }
 
     public PackagingOption PackagingOption { get; set; } = PackagingOption.StandardFree;
 

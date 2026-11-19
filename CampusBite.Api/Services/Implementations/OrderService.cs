@@ -97,20 +97,38 @@ public class OrderService : IOrderService
 
         bool isPickup = !string.IsNullOrWhiteSpace(request.DeliveryLocation) &&
             (request.DeliveryLocation.Contains("Pickup", StringComparison.OrdinalIgnoreCase) ||
-             request.DeliveryLocation.Contains("Counter", StringComparison.OrdinalIgnoreCase) ||
-             request.DeliveryLocation.Contains("Dine-In", StringComparison.OrdinalIgnoreCase) ||
+             request.DeliveryLocation.Contains("Counter", StringComparison.OrdinalIgnoreCase));
+
+        bool isDineIn = !string.IsNullOrWhiteSpace(request.DeliveryLocation) &&
+            (request.DeliveryLocation.Contains("Dine-In", StringComparison.OrdinalIgnoreCase) ||
              request.DeliveryLocation.Contains("DineIn", StringComparison.OrdinalIgnoreCase));
 
-        string orderType = !string.IsNullOrWhiteSpace(request.OrderType)
-            ? request.OrderType.Trim()
-            : (isPickup ? "Pickup" : "Delivery");
-
-        if (request.DeliveryLocation.Contains("Dine-In", StringComparison.OrdinalIgnoreCase) ||
-            request.DeliveryLocation.Contains("DineIn", StringComparison.OrdinalIgnoreCase) ||
-            orderType.Equals("DineIn", StringComparison.OrdinalIgnoreCase))
+        string orderType;
+        if (!string.IsNullOrWhiteSpace(request.OrderType))
+        {
+            orderType = request.OrderType.Trim();
+        }
+        else if (isDineIn)
         {
             orderType = "DineIn";
         }
+        else if (isPickup)
+        {
+            orderType = "Pickup";
+        }
+        else
+        {
+            orderType = "Delivery";
+        }
+
+        if (orderType.Equals("Delivery", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(request.DeliveryLocation))
+        {
+            return ApiResponse<OrderDto>.FailureResult("A campus delivery location (e.g. Dorm Block or Room) is required for delivery orders.");
+        }
+
+        string resolvedLocation = !string.IsNullOrWhiteSpace(request.DeliveryLocation)
+            ? request.DeliveryLocation.Trim()
+            : (orderType.Equals("DineIn", StringComparison.OrdinalIgnoreCase) ? "Table (Dine-In)" : "Pickup Counter");
 
         // Delivery fee applies ONLY to Delivery orders
         decimal deliveryFee = orderType.Equals("Delivery", StringComparison.OrdinalIgnoreCase) ? cafe.DeliveryFee : 0.00m;
@@ -283,7 +301,7 @@ public class OrderService : IOrderService
             DeliveryFee = deliveryFee,
             DiscountAmount = discountAmount,
             TotalAmount = totalAmount,
-            DeliveryLocation = request.DeliveryLocation.Trim(),
+            DeliveryLocation = resolvedLocation,
             SpecialNotes = request.SpecialNotes?.Trim(),
             CreatedAt = DateTime.UtcNow,
             OrderItems = orderItems
