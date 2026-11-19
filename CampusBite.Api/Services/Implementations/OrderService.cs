@@ -95,7 +95,13 @@ public class OrderService : IOrderService
             return ApiResponse<OrderDto>.FailureResult($"Order subtotal ({subtotal:C}) is below the café minimum order of {cafe.MinimumOrderAmount:C}.");
         }
 
-        decimal deliveryFee = cafe.DeliveryFee;
+        bool isPickup = !string.IsNullOrWhiteSpace(request.DeliveryLocation) &&
+            (request.DeliveryLocation.Contains("Pickup", StringComparison.OrdinalIgnoreCase) ||
+             request.DeliveryLocation.Contains("Counter", StringComparison.OrdinalIgnoreCase) ||
+             request.DeliveryLocation.Contains("Dine-In", StringComparison.OrdinalIgnoreCase) ||
+             request.DeliveryLocation.Contains("DineIn", StringComparison.OrdinalIgnoreCase));
+
+        decimal deliveryFee = isPickup ? 0.00m : cafe.DeliveryFee;
         decimal discountAmount = 0m;
         decimal totalAmount = subtotal + deliveryFee;
 

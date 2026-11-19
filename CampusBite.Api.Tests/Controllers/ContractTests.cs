@@ -131,7 +131,7 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         var initialContract = (await subResponse.Content.ReadFromJsonAsync<ApiResponse<StudentContractDto>>())!.Data!;
         int initialCredits = initialContract.RemainingCredits;
 
-        // 2. Act: Place an order for 2 meals using PaymentMethod.MealContract
+        // 2. Act: Place an order for 1 meal using PaymentMethod.MealContract
         var createRequest = new CreateOrderRequest
         {
             CafeId = 1,
@@ -140,7 +140,7 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
             SpecialNotes = "Redeem my dining pass",
             Items = new List<CreateOrderItemRequest>
             {
-                new() { ProductId = 1, Quantity = 2 } // 2 meals (2 * 220.00 = 440.00 ETB)
+                new() { ProductId = 3, Quantity = 1 } // 1 meal: Chechebsa with Honey (130.00 ETB, matches BaseMealCreditValue)
             }
         };
 
@@ -150,15 +150,15 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         var order = (await orderResponse.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
 
         // 3. Assert: Food is 100% discounted, student only pays delivery fee (15 ETB)
-        order.DiscountAmount.Should().Be(440.00m, "Meal contract must cover 100% of the food price");
+        order.DiscountAmount.Should().Be(130.00m, "Meal contract must cover 100% of the food price");
         order.TotalAmount.Should().Be(15.00m, "Student only pays delivery fee");
 
-        // 4. Assert: Exactly 2 credits decremented from the student's wallet
+        // 4. Assert: Exactly 1 credit decremented from the student's wallet
         var walletResponse = await studentClient.GetAsync("/api/contracts/my-contracts");
         var myContracts = (await walletResponse.Content.ReadFromJsonAsync<ApiResponse<List<StudentContractDto>>>())!.Data!;
         var updatedContract = myContracts.First(c => c.CafeId == 1);
 
-        updatedContract.RemainingCredits.Should().Be(initialCredits - 2, "2 meals ordered must deduct exactly 2 credits");
+        updatedContract.RemainingCredits.Should().Be(initialCredits - 1, "1 meal ordered must deduct exactly 1 credit");
     }
 
     [Fact]
@@ -191,39 +191,39 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Hybrid_Group_Order_With_Partial_Credits_Discounts_Covered_Items_And_Bills_Remainder_To_Cash()
     {
-        // 1. Arrange: Manager creates a custom 2-meal pass
+        // 1. Arrange: Manager creates a custom 1-meal pass
         var managerClient = await CreateAuthenticatedClientAsync("manager@centralcafe.com", "Password123!");
         var createPlanReq = new CreateContractPlanRequest
         {
             CafeId = 1,
             Name = $"Group Hybrid Test Pass {Guid.NewGuid():N}",
-            Description = "2 Meals for Group Testing",
-            Price = 180.00m,
-            TotalCredits = 2,
+            Description = "1 Meal for Group Testing",
+            Price = 90.00m,
+            TotalCredits = 1,
             ValidityDays = 7
         };
         var planCreateRes = await managerClient.PostAsJsonAsync("/api/contracts/plans", createPlanReq);
         planCreateRes.StatusCode.Should().Be(HttpStatusCode.OK);
         var createdPlan = (await planCreateRes.Content.ReadFromJsonAsync<ApiResponse<ContractPlanDto>>())!.Data!;
 
-        // 2. Student subscribes to this 2-meal pass
+        // 2. Student subscribes to this 1-meal pass
         var studentClient = await CreateUniqueStudentClientAsync();
         var subRes = await studentClient.PostAsJsonAsync("/api/contracts/subscribe", new SubscribeToPlanRequest { ContractPlanId = createdPlan.Id });
         subRes.StatusCode.Should().Be(HttpStatusCode.OK);
         var contract = (await subRes.Content.ReadFromJsonAsync<ApiResponse<StudentContractDto>>())!.Data!;
-        contract.RemainingCredits.Should().Be(2);
+        contract.RemainingCredits.Should().Be(1);
 
-        // 3. Act: Group order of 4 meals (e.g. 3 friends ordering on 1 phone)
-        // 4 x 220.00 ETB = 880.00 ETB subtotal, 15.00 ETB delivery fee
+        // 3. Act: Group order of 2 meals (1 on pass, 1 in cash)
+        // 2 x 220.00 ETB = 440.00 ETB subtotal, 15.00 ETB delivery fee
         var groupOrderReq = new CreateOrderRequest
         {
             CafeId = 1,
             DeliveryLocation = "Library Study Room 4",
             PaymentMethod = PaymentMethod.MealContract,
-            SpecialNotes = "Group meal: 2 on pass, 2 in cash",
+            SpecialNotes = "Group meal: 1 on pass, 1 in cash",
             Items = new List<CreateOrderItemRequest>
             {
-                new() { ProductId = 1, Quantity = 4 }
+                new() { ProductId = 1, Quantity = 2 }
             }
         };
 
@@ -232,14 +232,14 @@ public class ContractTests : IClassFixture<CustomWebApplicationFactory>
         var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
 
         // 4. Assert Hybrid Math:
-        // - Subtotal = 880.00 ETB
-        // - Discount = 440.00 ETB (2 meals covered 100%)
+        // - Subtotal = 440.00 ETB
+        // - Discount = 220.00 ETB (1 meal covered 100%)
         // - Delivery Fee = 15.00 ETB
-        // - TotalAmount = (880 - 440) + 15 = 455.00 ETB
-        order.Subtotal.Should().Be(880.00m);
-        order.DiscountAmount.Should().Be(440.00m, "Only the 2 available credits must be discounted");
+        // - TotalAmount = (440 - 220) + 15 = 235.00 ETB
+        order.Subtotal.Should().Be(440.00m);
+        order.DiscountAmount.Should().Be(220.00m, "Only the 1 available credit must be discounted");
         order.DeliveryFee.Should().Be(15.00m);
-        order.TotalAmount.Should().Be(455.00m, "Remaining 2 meals plus delivery fee must be billed to cash");
+        order.TotalAmount.Should().Be(235.00m, "Remaining 1 meal plus delivery fee must be billed to cash");
 
         // 5. Assert: Student wallet balance dropped to 0 and contract marked Depleted
         var walletRes = await studentClient.GetAsync("/api/contracts/my-contracts");
