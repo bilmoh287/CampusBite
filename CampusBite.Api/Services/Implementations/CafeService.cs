@@ -112,6 +112,32 @@ public class CafeService : ICafeService
         return ApiResponse<CafeDto>.SuccessResult(MapToDto(cafe, false));
     }
 
+    public async Task<ApiResponse<CafeDto>> UpdatePackagingFeeAsync(int cafeId, decimal newFee, int currentUserId)
+    {
+        if (newFee < 0 || newFee > 100)
+        {
+            return ApiResponse<CafeDto>.FailureResult("Takeaway packaging fee must be between 0 and 100 ETB.");
+        }
+
+        var cafe = await _context.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);
+        if (cafe == null)
+        {
+            return ApiResponse<CafeDto>.FailureResult("Café not found.");
+        }
+
+        if (cafe.OwnerId != currentUserId)
+        {
+            return ApiResponse<CafeDto>.FailureResult("You do not have permission to manage this café.");
+        }
+
+        cafe.TakeawayPackagingFee = newFee;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Café {CafeId} takeaway packaging fee updated to {Fee} ETB by Owner {OwnerId}", cafeId, newFee, currentUserId);
+
+        return ApiResponse<CafeDto>.SuccessResult(MapToDto(cafe, false), "Takeaway packaging fee updated successfully.");
+    }
+
     public async Task<ApiResponse<CafeDto>> ToggleStatusAsync(int cafeId, bool isOpen, int currentUserId)
     {
         var cafe = await _context.Cafes.FirstOrDefaultAsync(c => c.Id == cafeId);

@@ -145,6 +145,13 @@ public class CafeAdminService : ICafeAdminService
         return response != null && response.Success;
     }
 
+    public async Task<bool> UpdatePackagingFeeAsync(int cafeId, decimal newFee)
+    {
+        var request = new UpdatePackagingFeeRequest { TakeawayPackagingFee = newFee };
+        var response = await _apiClient.PatchAsync<UpdatePackagingFeeRequest, CafeDto>($"{ApiConstants.Cafes}/{cafeId}/packaging-fee", request);
+        return response != null && response.Success;
+    }
+
     public Task<List<Expense>> GetCafeExpensesAsync(int cafeId)
     {
         var list = _localExpenses.Where(e => e.CafeId == cafeId).OrderByDescending(e => e.ExpenseDate).ToList();
@@ -212,7 +219,9 @@ public class CafeAdminService : ICafeAdminService
             Location = dto.Location,
             IsOpen = dto.IsActive,
             ImageUrl = dto.LogoUrl ?? string.Empty,
-            Announcement = null
+            Announcement = dto.Announcement,
+            DeliveryFee = dto.DeliveryFee,
+            TakeawayPackagingFee = dto.TakeawayPackagingFee
         };
     }
 
@@ -257,7 +266,9 @@ public class CafeAdminService : ICafeAdminService
             OrderDate = dto.CreatedAt.ToLocalTime(),
             TotalAmount = dto.TotalAmount,
             Status = dto.Status.ToString(),
-            OrderType = dto.DeliveryFee > 0 ? "Delivery" : "Pickup",
+            OrderType = !string.IsNullOrEmpty(dto.OrderType) ? dto.OrderType : (dto.DeliveryFee > 0 ? "Delivery" : "Pickup"),
+            PackagingOption = dto.PackagingOption,
+            PackagingFee = dto.PackagingFee,
             DeliveryLocation = dto.DeliveryLocation,
             Notes = dto.SpecialNotes,
             Cafe = new Cafe

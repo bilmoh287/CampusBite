@@ -16,6 +16,7 @@ public interface ICafeAdminService
     Task<bool> UpdateProductStockAsync(int productId, int? stockQuantity);
     Task<bool> ToggleCafeStatusAsync(int cafeId, bool isOpen);
     Task<bool> UpdateCafeAnnouncementAsync(int cafeId, string? announcement);
+    Task<bool> UpdatePackagingFeeAsync(int cafeId, decimal newFee);
     Task<List<Expense>> GetCafeExpensesAsync(int cafeId);
     Task<bool> AddExpenseAsync(Expense expense);
     Task<bool> DeleteExpenseAsync(int expenseId);

@@ -91,7 +91,9 @@ public class DeliveryService : IDeliveryService
             OrderDate = dto.CreatedAt.ToLocalTime(),
             TotalAmount = dto.TotalAmount,
             Status = uiStatus,
-            OrderType = "Delivery",
+            OrderType = !string.IsNullOrEmpty(dto.OrderType) ? dto.OrderType : "Delivery",
+            PackagingOption = dto.PackagingOption,
+            PackagingFee = dto.PackagingFee,
             DeliveryLocation = dto.DeliveryLocation,
             Notes = dto.SpecialNotes,
             Cafe = new Cafe

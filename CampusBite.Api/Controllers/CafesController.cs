@@ -73,6 +73,18 @@ public class CafesController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPatch("{id}/packaging-fee")]
+    [Authorize(Roles = "CafeOwner,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<CafeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CafeDto>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdatePackagingFee(int id, [FromBody] UpdatePackagingFeeRequest request)
+    {
+        if (!CurrentUserId.HasValue) return Unauthorized();
+
+        var result = await _cafeService.UpdatePackagingFeeAsync(id, request.TakeawayPackagingFee, CurrentUserId.Value);
+        return HandleResult(result);
+    }
+
     [HttpPost("{id}/counter-punch")]
     [Authorize(Roles = "CafeOwner,CafeStaff,Admin")]
     [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status200OK)]

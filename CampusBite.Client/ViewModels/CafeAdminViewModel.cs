@@ -154,6 +154,12 @@ public partial class CafeAdminViewModel : ObservableObject
     [ObservableProperty]
     private string _announcementText = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PackagingFeeSummaryText))]
+    private decimal _takeawayPackagingFee = 0.00m;
+
+    public string PackagingFeeSummaryText => TakeawayPackagingFee > 0 ? $"{TakeawayPackagingFee:F0} ETB / Box" : "Free (Festal Only)";
+
     private bool _isBusy;
     private bool _isInitializing;
 
@@ -262,6 +268,7 @@ public partial class CafeAdminViewModel : ObservableObject
             _isCafeOpen = value.IsOpen;
             OnPropertyChanged(nameof(IsCafeOpen));
             AnnouncementText = value.Announcement ?? string.Empty;
+            TakeawayPackagingFee = value.TakeawayPackagingFee;
 
             if (!_isInitializing && !_isBusy)
             {
@@ -298,6 +305,81 @@ public partial class CafeAdminViewModel : ObservableObject
         {
             SelectedCafe.Announcement = null;
             await Shell.Current.DisplayAlertAsync("Announcement Cleared 🧹", $"Active announcement removed from {SelectedCafe.Name}.", "OK");
+        }
+    }
+
+    [RelayCommand]
+    public async Task UpdatePackagingFeeAsync()
+    {
+        if (SelectedCafe == null || _isBusy) return;
+
+        string currentText = TakeawayPackagingFee > 0 ? $"{TakeawayPackagingFee:F0} ETB" : "Free (Festal Only)";
+        string action = await Shell.Current.DisplayActionSheetAsync(
+            $"Packaging Fee (Current: {currentText})",
+            "Cancel",
+            null,
+            "Free (Festal Only - 0 ETB)",
+            "20 ETB (Sturdy Box)",
+            "25 ETB (Sturdy Box)",
+            "30 ETB (Sturdy Box)",
+            "Custom Fee...");
+
+        if (string.IsNullOrEmpty(action) || action == "Cancel") return;
+
+        decimal targetFee = TakeawayPackagingFee;
+        if (action.StartsWith("Free"))
+        {
+            targetFee = 0.00m;
+        }
+        else if (action.StartsWith("20"))
+        {
+            targetFee = 20.00m;
+        }
+        else if (action.StartsWith("25"))
+        {
+            targetFee = 25.00m;
+        }
+        else if (action.StartsWith("30"))
+        {
+            targetFee = 30.00m;
+        }
+        else if (action.StartsWith("Custom"))
+        {
+            string input = await Shell.Current.DisplayPromptAsync(
+                "Custom Packaging Fee",
+                "Enter takeaway container price in ETB (0 to 100):",
+                "Save",
+                "Cancel",
+                keyboard: Keyboard.Numeric,
+                initialValue: TakeawayPackagingFee.ToString("F0"));
+
+            if (string.IsNullOrWhiteSpace(input)) return;
+            if (!decimal.TryParse(input, out var parsed) || parsed < 0 || parsed > 100)
+            {
+                await Shell.Current.DisplayAlertAsync("Invalid Amount", "Fee must be a number between 0 and 100 ETB.", "OK");
+                return;
+            }
+            targetFee = Math.Round(parsed, 2);
+        }
+
+        _isBusy = true;
+        try
+        {
+            bool success = await _adminService.UpdatePackagingFeeAsync(SelectedCafe.Id, targetFee);
+            if (success)
+            {
+                TakeawayPackagingFee = targetFee;
+                SelectedCafe.TakeawayPackagingFee = targetFee;
+                await Shell.Current.DisplayAlertAsync("Packaging Fee Updated 📦", $"Takeaway box fee updated to {targetFee:F0} ETB. Students ordering takeaway will see this price at checkout.", "OK");
+            }
+            else
+            {
+                await Shell.Current.DisplayAlertAsync("Error", "Failed to update packaging fee on the server.", "OK");
+            }
+        }
+        finally
+        {
+            _isBusy = false;
         }
     }
 

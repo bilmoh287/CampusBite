@@ -181,4 +181,83 @@ public class CafeManagementTests : IClassFixture<CustomWebApplicationFactory>
         result!.Success.Should().BeFalse();
         result.Message.Should().Contain("permission");
     }
+
+    [Fact]
+    public async Task Owner_Can_Update_Takeaway_Packaging_Fee_And_Public_Sees_It()
+    {
+        // Arrange
+        var ownerClient = await CreateAuthenticatedClientAsync("manager@centralcafe.com", "Password123!");
+
+        // Act - Owner updates takeaway packaging fee to 35 ETB
+        var patchResponse = await ownerClient.PatchAsJsonAsync("/api/cafes/1/packaging-fee", new UpdatePackagingFeeRequest
+        {
+            TakeawayPackagingFee = 35.00m
+        });
+
+        // Assert PATCH response
+        patchResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var patchResult = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<CafeDto>>();
+        patchResult!.Success.Should().BeTrue();
+        patchResult.Data!.TakeawayPackagingFee.Should().Be(35.00m);
+
+        // Assert Public GET response reflects the updated fee
+        var publicClient = _factory.CreateClient();
+        var getResponse = await publicClient.GetAsync("/api/cafes/1");
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var getResult = await getResponse.Content.ReadFromJsonAsync<ApiResponse<CafeDto>>();
+        getResult!.Data!.TakeawayPackagingFee.Should().Be(35.00m);
+    }
+
+    [Fact]
+    public async Task Owner_Can_Set_Packaging_Fee_To_Zero_For_Free_Festal_Only()
+    {
+        // Arrange
+        var ownerClient = await CreateAuthenticatedClientAsync("manager@centralcafe.com", "Password123!");
+
+        // Act - Owner resets fee to 0 (all takeaway is free festal/paper)
+        var patchResponse = await ownerClient.PatchAsJsonAsync("/api/cafes/1/packaging-fee", new UpdatePackagingFeeRequest
+        {
+            TakeawayPackagingFee = 0.00m
+        });
+
+        // Assert
+        patchResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var patchResult = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<CafeDto>>();
+        patchResult!.Data!.TakeawayPackagingFee.Should().Be(0.00m);
+    }
+
+    [Fact]
+    public async Task Student_Cannot_Update_Packaging_Fee_Returns_403Forbidden()
+    {
+        // Arrange
+        var studentClient = await CreateUniqueUserClientAsync(UserRole.Student);
+
+        // Act
+        var response = await studentClient.PatchAsJsonAsync("/api/cafes/1/packaging-fee", new UpdatePackagingFeeRequest
+        {
+            TakeawayPackagingFee = 0.00m
+        });
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Another_CafeOwner_Cannot_Modify_Competitor_Packaging_Fee()
+    {
+        // Arrange: Competitor owner who doesn't own Cafe 1
+        var competitorOwnerClient = await CreateUniqueUserClientAsync(UserRole.CafeOwner);
+
+        // Act
+        var response = await competitorOwnerClient.PatchAsJsonAsync("/api/cafes/1/packaging-fee", new UpdatePackagingFeeRequest
+        {
+            TakeawayPackagingFee = 50.00m
+        });
+
+        // Assert: 400 Bad Request
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<CafeDto>>();
+        result!.Success.Should().BeFalse();
+        result.Message.Should().Contain("permission");
+    }
 }

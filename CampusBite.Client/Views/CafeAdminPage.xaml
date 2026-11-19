@@ -93,6 +93,33 @@
                     </Grid>
                 </Border>
 
+                <!-- Takeaway Packaging Policy Card (Owner Only) -->
+                <Border BackgroundColor="#222222" StrokeThickness="1" Stroke="#333333" Padding="14,10" IsVisible="{Binding IsOwner}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Text="Takeaway Packaging Policy" FontSize="13" FontAttributes="Bold" TextColor="#CCCCCC"/>
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="Current Sturdy Box Fee:" FontSize="11" TextColor="#888888"/>
+                                <Label Text="{Binding PackagingFeeSummaryText}" FontSize="11" FontAttributes="Bold" TextColor="#FF9800"/>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Edit Fee ⚙️"
+                                Command="{Binding UpdatePackagingFeeCommand}"
+                                BackgroundColor="#333333"
+                                TextColor="White"
+                                FontSize="11"
+                                FontAttributes="Bold"
+                                CornerRadius="6"
+                                Padding="12,0"
+                                HeightRequest="34"
+                                VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
                 <!-- Cafe Broadcast Announcement Card -->
                 <Border BackgroundColor="#222222" StrokeThickness="1" Stroke="#333333" Padding="14,10">
                     <Border.StrokeShape>
@@ -318,12 +345,28 @@
                                 <VerticalStackLayout Spacing="12">
                                     <!-- Header Row -->
                                     <Grid ColumnDefinitions="*, Auto">
-                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="4">
                                             <HorizontalStackLayout Spacing="8">
                                                 <Label Text="{Binding Id, StringFormat='Ticket #{0}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
-                                                <Label Text="{Binding OrderType, StringFormat='• {0}'}" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
+                                                <Label Text="{Binding OrderDate, StringFormat='• {0:t}'}" FontSize="12" TextColor="#777777" VerticalOptions="Center"/>
                                             </HorizontalStackLayout>
-                                            <Label Text="{Binding OrderDate, StringFormat='{0:g}'}" FontSize="12" TextColor="#777777"/>
+                                            
+                                            <!-- Dining Mode & Packaging Badges -->
+                                            <HorizontalStackLayout Spacing="6" Margin="0,2,0,0">
+                                                <Border BackgroundColor="{Binding DiningModeBadgeBgColor}" Stroke="{Binding DiningModeBadgeColor}" StrokeThickness="1" Padding="7,2">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="6"/>
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding DiningModeBadgeText}" FontSize="11" FontAttributes="Bold" TextColor="{Binding DiningModeBadgeColor}"/>
+                                                </Border>
+
+                                                <Border BackgroundColor="{Binding PackagingBadgeBgColor}" Stroke="{Binding PackagingBadgeColor}" StrokeThickness="1" Padding="7,2">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="6"/>
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding PackagingBadgeText}" FontSize="11" FontAttributes="Bold" TextColor="{Binding PackagingBadgeColor}"/>
+                                                </Border>
+                                            </HorizontalStackLayout>
                                         </VerticalStackLayout>
 
                                         <!-- Status Pill -->

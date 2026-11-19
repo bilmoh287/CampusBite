@@ -233,12 +233,20 @@
                                 <VerticalStackLayout Spacing="10">
                                     <!-- Ticket Header Row -->
                                     <Grid ColumnDefinitions="*, Auto">
-                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="3">
                                             <HorizontalStackLayout Spacing="8">
                                                 <Label Text="{Binding Id, StringFormat='Delivery #{0}'}" FontSize="16" FontAttributes="Bold" TextColor="White"/>
                                                 <Label Text="{Binding OrderDate, StringFormat='• {0:t}'}" FontSize="13" TextColor="#AAAAAA" VerticalOptions="Center"/>
                                             </HorizontalStackLayout>
-                                            <Label Text="{Binding Cafe.Name, StringFormat='Pickup: {0}'}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800"/>
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Label Text="{Binding Cafe.Name, StringFormat='Pickup: {0}'}" FontSize="13" FontAttributes="Bold" TextColor="#FF9800" VerticalOptions="Center"/>
+                                                <Border BackgroundColor="{Binding PackagingBadgeBgColor}" Stroke="{Binding PackagingBadgeColor}" StrokeThickness="1" Padding="6,2" VerticalOptions="Center">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="6"/>
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding PackagingBadgeText}" FontSize="10" FontAttributes="Bold" TextColor="{Binding PackagingBadgeColor}"/>
+                                                </Border>
+                                            </HorizontalStackLayout>
                                         </VerticalStackLayout>
 
                                         <!-- Status Badge -->
