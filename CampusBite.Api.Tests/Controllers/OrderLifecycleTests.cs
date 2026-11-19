@@ -314,5 +314,120 @@ public class OrderLifecycleTests : IClassFixture<CustomWebApplicationFactory>
         var restoredProd = (await restoredProdRes.Content.ReadFromJsonAsync<ApiResponse<ProductDto>>())!.Data!;
         restoredProd.StockQuantity.Should().Be(initialStock, "Stock must be fully restored when pending order is cancelled");
     }
+
+    [Fact]
+    public async Task DineIn_Order_Charges_Zero_Packaging_And_Delivery_Fees()
+    {
+        var studentClient = await CreateAuthenticatedClientAsync("student@aau.edu.et", "Password123!");
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            OrderType = "DineIn",
+            DeliveryLocation = "Table 12, Ground Floor",
+            PaymentMethod = PaymentMethod.Cash,
+            PackagingOption = PackagingOption.StandardFree,
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 3, Quantity = 1 } } // 130 ETB
+        });
+
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+        order.OrderType.Should().Be("DineIn");
+        order.PackagingOption.Should().Be(PackagingOption.StandardFree);
+        order.PackagingFee.Should().Be(0.00m, "Dine-in served on ceramic plates incurs zero packaging fee");
+        order.DeliveryFee.Should().Be(0.00m, "Dine-in incurs zero delivery fee");
+        order.TotalAmount.Should().Be(130.00m);
+    }
+
+    [Fact]
+    public async Task Pickup_With_Festal_Charges_Zero_Packaging_And_Zero_Delivery()
+    {
+        var studentClient = await CreateAuthenticatedClientAsync("student@aau.edu.et", "Password123!");
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            OrderType = "Pickup",
+            DeliveryLocation = "Pickup Counter",
+            PaymentMethod = PaymentMethod.Cash,
+            PackagingOption = PackagingOption.StandardFree,
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 3, Quantity = 1 } } // 130 ETB
+        });
+
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+        order.OrderType.Should().Be("Pickup");
+        order.PackagingOption.Should().Be(PackagingOption.StandardFree);
+        order.PackagingFee.Should().Be(0.00m, "Standard festal/wrap is free of charge");
+        order.DeliveryFee.Should().Be(0.00m);
+        order.TotalAmount.Should().Be(130.00m);
+    }
+
+    [Fact]
+    public async Task Pickup_With_TakeawayBox_Charges_Packaging_Fee_Only()
+    {
+        var studentClient = await CreateAuthenticatedClientAsync("student@aau.edu.et", "Password123!");
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            OrderType = "Pickup",
+            DeliveryLocation = "Pickup Counter",
+            PaymentMethod = PaymentMethod.Cash,
+            PackagingOption = PackagingOption.TakeawayBox,
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 3, Quantity = 1 } } // 130 ETB
+        });
+
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+        order.OrderType.Should().Be("Pickup");
+        order.PackagingOption.Should().Be(PackagingOption.TakeawayBox);
+        order.PackagingFee.Should().Be(25.00m, "Takeaway plastic box costs 25 ETB configured by cafe");
+        order.DeliveryFee.Should().Be(0.00m);
+        order.TotalAmount.Should().Be(155.00m); // 130 + 25 = 155 ETB
+    }
+
+    [Fact]
+    public async Task Delivery_With_Festal_Charges_Courier_Fee_Without_Packaging_Fee()
+    {
+        var studentClient = await CreateAuthenticatedClientAsync("student@aau.edu.et", "Password123!");
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            OrderType = "Delivery",
+            DeliveryLocation = "Dorm Block 5, Room 102",
+            PaymentMethod = PaymentMethod.Cash,
+            PackagingOption = PackagingOption.StandardFree, // Student walking courier in festal
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 3, Quantity = 1 } } // 130 ETB
+        });
+
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+        order.OrderType.Should().Be("Delivery");
+        order.PackagingOption.Should().Be(PackagingOption.StandardFree);
+        order.PackagingFee.Should().Be(0.00m);
+        order.DeliveryFee.Should().Be(15.00m);
+        order.TotalAmount.Should().Be(145.00m); // 130 + 15 = 145 ETB
+    }
+
+    [Fact]
+    public async Task Delivery_With_TakeawayBox_Charges_Both_Delivery_And_Packaging_Fee()
+    {
+        var studentClient = await CreateAuthenticatedClientAsync("student@aau.edu.et", "Password123!");
+        var orderRes = await studentClient.PostAsJsonAsync("/api/orders", new CreateOrderRequest
+        {
+            CafeId = 1,
+            OrderType = "Delivery",
+            DeliveryLocation = "Dorm Block 5, Room 102",
+            PaymentMethod = PaymentMethod.Cash,
+            PackagingOption = PackagingOption.TakeawayBox,
+            Items = new List<CreateOrderItemRequest> { new() { ProductId = 3, Quantity = 1 } } // 130 ETB
+        });
+
+        orderRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = (await orderRes.Content.ReadFromJsonAsync<ApiResponse<OrderDto>>())!.Data!;
+        order.OrderType.Should().Be("Delivery");
+        order.PackagingOption.Should().Be(PackagingOption.TakeawayBox);
+        order.PackagingFee.Should().Be(25.00m, "Sturdy container fee");
+        order.DeliveryFee.Should().Be(15.00m, "Courier fee");
+        order.TotalAmount.Should().Be(170.00m); // 130 + 15 + 25 = 170 ETB
+    }
 }
 

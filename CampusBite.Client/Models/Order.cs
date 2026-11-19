@@ -1,3 +1,5 @@
+using CampusBite.Shared.Enums;
+
 namespace CampusBite.Models;
 
 public partial class Order : ObservableObject
@@ -12,7 +14,9 @@ public partial class Order : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanBeCancelled))]
     private string _status = "Pending";
 
-    public string OrderType { get; set; } = "Pickup";
+    public string OrderType { get; set; } = "DineIn";
+    public PackagingOption PackagingOption { get; set; } = PackagingOption.StandardFree;
+    public decimal PackagingFee { get; set; } = 0.00m;
     public string? DeliveryLocation { get; set; }
     public string? Notes { get; set; }
     public string? CourierName { get; set; }

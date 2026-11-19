@@ -10,6 +10,7 @@ public class Cafe
     public string Location { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public decimal DeliveryFee { get; set; } = 0.00m;
+    public decimal TakeawayPackagingFee { get; set; } = 25.00m;
     public decimal MinimumOrderAmount { get; set; } = 0.00m;
     public bool IsActive { get; set; } = true;
     public string? Announcement { get; set; }

@@ -24,7 +24,8 @@ public class OrderService : IOrderService
         string? notes, 
         IEnumerable<CartItem> cartItems, 
         PaymentMethod paymentMethod = PaymentMethod.Cash,
-        IEnumerable<string>? coDinerUsernames = null)
+        IEnumerable<string>? coDinerUsernames = null,
+        PackagingOption packagingOption = PackagingOption.StandardFree)
     {
         var itemsList = cartItems.ToList();
         if (!itemsList.Any())
@@ -34,11 +35,15 @@ public class OrderService : IOrderService
 
         var location = !string.IsNullOrWhiteSpace(deliveryLocation) 
             ? deliveryLocation.Trim() 
-            : (string.Equals(orderType, "Delivery", StringComparison.OrdinalIgnoreCase) ? "Campus Dorm" : "Pickup Counter");
+            : (string.Equals(orderType, "Delivery", StringComparison.OrdinalIgnoreCase) 
+                ? "Campus Dorm" 
+                : (string.Equals(orderType, "DineIn", StringComparison.OrdinalIgnoreCase) ? "Table (Dine-In)" : "Pickup Counter"));
 
         var request = new CreateOrderRequest
         {
             CafeId = cafeId,
+            OrderType = orderType,
+            PackagingOption = packagingOption,
             DeliveryLocation = location,
             PaymentMethod = paymentMethod,
             SpecialNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
@@ -99,7 +104,9 @@ public class OrderService : IOrderService
             OrderDate = dto.CreatedAt.ToLocalTime(),
             TotalAmount = dto.TotalAmount,
             Status = dto.Status.ToString(),
-            OrderType = orderTypeFallback ?? (dto.DeliveryFee > 0 ? "Delivery" : "Pickup"),
+            OrderType = !string.IsNullOrEmpty(dto.OrderType) ? dto.OrderType : (orderTypeFallback ?? (dto.DeliveryFee > 0 ? "Delivery" : "Pickup")),
+            PackagingOption = dto.PackagingOption,
+            PackagingFee = dto.PackagingFee,
             DeliveryLocation = dto.DeliveryLocation,
             Notes = dto.SpecialNotes,
             Cafe = new Cafe

@@ -16,8 +16,11 @@ public class OrderDto
     public PaymentMethod PaymentMethod { get; set; }
     public decimal Subtotal { get; set; }
     public decimal DeliveryFee { get; set; }
+    public decimal PackagingFee { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal TotalAmount { get; set; }
+    public string OrderType { get; set; } = "DineIn";
+    public PackagingOption PackagingOption { get; set; } = PackagingOption.StandardFree;
     public string DeliveryLocation { get; set; } = string.Empty;
     public string? SpecialNotes { get; set; }
     public DateTime CreatedAt { get; set; }

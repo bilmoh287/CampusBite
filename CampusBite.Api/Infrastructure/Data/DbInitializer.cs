@@ -98,6 +98,7 @@ public static class DbInitializer
                 Location = "Student Center, Ground Floor",
                 LogoUrl = "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500",
                 DeliveryFee = 15.00m,
+                TakeawayPackagingFee = 25.00m,
                 MinimumOrderAmount = 50.00m,
                 OwnerId = managerUser.Id,
                 UniversityId = uniId,

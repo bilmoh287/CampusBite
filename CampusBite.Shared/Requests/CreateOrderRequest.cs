@@ -12,6 +12,10 @@ public class CreateOrderRequest
     [StringLength(200, MinimumLength = 3, ErrorMessage = "Delivery location must be between 3 and 200 characters.")]
     public string DeliveryLocation { get; set; } = string.Empty;
 
+    public string OrderType { get; set; } = "DineIn";
+
+    public PackagingOption PackagingOption { get; set; } = PackagingOption.StandardFree;
+
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
 
     public string? SpecialNotes { get; set; }

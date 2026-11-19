@@ -101,6 +101,7 @@ public class CampusBiteDbContext : DbContext
             entity.Property(c => c.Location).IsRequired().HasMaxLength(150);
             entity.Property(c => c.LogoUrl).HasMaxLength(255);
             entity.Property(c => c.DeliveryFee).HasPrecision(10, 2);
+            entity.Property(c => c.TakeawayPackagingFee).HasPrecision(10, 2);
             entity.Property(c => c.MinimumOrderAmount).HasPrecision(10, 2);
 
             entity.HasMany(c => c.Categories)
@@ -169,6 +170,9 @@ public class CampusBiteDbContext : DbContext
             entity.Property(o => o.OrderNumber).IsRequired().HasMaxLength(20);
             entity.Property(o => o.Status).HasConversion<string>().HasMaxLength(30);
             entity.Property(o => o.PaymentMethod).HasConversion<string>().HasMaxLength(30);
+            entity.Property(o => o.OrderType).IsRequired().HasMaxLength(30);
+            entity.Property(o => o.PackagingOption).HasConversion<string>().HasMaxLength(30);
+            entity.Property(o => o.PackagingFee).HasPrecision(10, 2);
             entity.Property(o => o.Subtotal).HasPrecision(10, 2);
             entity.Property(o => o.DeliveryFee).HasPrecision(10, 2);
             entity.Property(o => o.DiscountAmount).HasPrecision(10, 2);

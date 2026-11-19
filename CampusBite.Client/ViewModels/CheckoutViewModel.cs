@@ -26,9 +26,38 @@ public partial class CheckoutViewModel : ObservableObject
     private readonly IOrderService _orderService;
     private readonly IContractService _contractService;
     private readonly IBuddyService _buddyService;
+    private readonly ICafeService _cafeService;
 
     [ObservableProperty]
-    private string _selectedOrderType = "Pickup";
+    [NotifyPropertyChangedFor(nameof(DeliveryFee))]
+    [NotifyPropertyChangedFor(nameof(PackagingFee))]
+    [NotifyPropertyChangedFor(nameof(TotalAmount))]
+    [NotifyPropertyChangedFor(nameof(IsDineInSelected))]
+    [NotifyPropertyChangedFor(nameof(IsPickupSelected))]
+    [NotifyPropertyChangedFor(nameof(IsDeliverySelected))]
+    [NotifyPropertyChangedFor(nameof(ShowPackagingChoice))]
+    [NotifyPropertyChangedFor(nameof(PerPersonShareText))]
+    private string _selectedOrderType = "DineIn";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PackagingFee))]
+    [NotifyPropertyChangedFor(nameof(TotalAmount))]
+    [NotifyPropertyChangedFor(nameof(IsStandardPackagingSelected))]
+    [NotifyPropertyChangedFor(nameof(IsTakeawayBoxSelected))]
+    [NotifyPropertyChangedFor(nameof(IsOwnContainerSelected))]
+    private PackagingOption _selectedPackagingOption = PackagingOption.StandardFree;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PackagingFee))]
+    [NotifyPropertyChangedFor(nameof(TotalAmount))]
+    [NotifyPropertyChangedFor(nameof(ShowPackagingChoice))]
+    [NotifyPropertyChangedFor(nameof(TakeawayBoxPriceText))]
+    private decimal _cafePackagingFee = 25.00m;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DeliveryFee))]
+    [NotifyPropertyChangedFor(nameof(TotalAmount))]
+    private decimal _cafeDeliveryFee = 15.00m;
 
     [ObservableProperty]
     private string _deliveryLocation = string.Empty;
@@ -70,12 +99,22 @@ public partial class CheckoutViewModel : ObservableObject
     public ObservableCollection<OrderCoverDetail> SplitCoverageDetails { get; } = new();
 
     public decimal Subtotal => _cartService.TotalAmount;
-    public decimal DeliveryFee => SelectedOrderType == "Delivery" ? 15.00m : 0.00m; // 15 ETB campus delivery fee
+    public decimal DeliveryFee => IsDeliverySelected ? CafeDeliveryFee : 0.00m;
+    public decimal PackagingFee => (!IsDineInSelected && SelectedPackagingOption == PackagingOption.TakeawayBox) ? CafePackagingFee : 0.00m;
 
+    public bool IsDineInSelected => SelectedOrderType == "DineIn";
     public bool IsPickupSelected => SelectedOrderType == "Pickup";
     public bool IsDeliverySelected => SelectedOrderType == "Delivery";
-    public bool IsNotProcessing => !IsProcessing;
 
+    public bool IsStandardPackagingSelected => SelectedPackagingOption == PackagingOption.StandardFree;
+    public bool IsTakeawayBoxSelected => SelectedPackagingOption == PackagingOption.TakeawayBox;
+    public bool IsOwnContainerSelected => SelectedPackagingOption == PackagingOption.OwnContainer;
+
+    // Progressive Disclosure: Only show container option if NOT Dine-In AND the cafe actually offers/charges for boxes
+    public bool ShowPackagingChoice => !IsDineInSelected && CafePackagingFee > 0;
+    public string TakeawayBoxPriceText => CafePackagingFee > 0 ? $"+{CafePackagingFee:F0} ETB" : "Free";
+
+    public bool IsNotProcessing => !IsProcessing;
     public bool IsCashSelected => SelectedPaymentMethod == "Cash";
     public bool IsContractSelected => SelectedPaymentMethod == "MealContract";
 
@@ -86,10 +125,8 @@ public partial class CheckoutViewModel : ObservableObject
     public bool CanAddMoreCoDiners => SelectedCoDinerUsernames.Count < Math.Max(0, TotalItemQuantity - 1);
 
     public int CoveredMealsCount => SplitCoverageDetails.Count(d => d.DiscountCovered > 0);
-
     public decimal DiscountAmount => SplitCoverageDetails.Sum(d => d.DiscountCovered);
-
-    public decimal TotalAmount => Math.Max(0, (Subtotal - DiscountAmount) + DeliveryFee);
+    public decimal TotalAmount => Math.Max(0, (Subtotal - DiscountAmount) + DeliveryFee + PackagingFee);
 
     public bool HasDiscount => DiscountAmount > 0;
     public bool HasGroupOrder => TotalItemQuantity > 1;
@@ -120,26 +157,63 @@ public partial class CheckoutViewModel : ObservableObject
         ICartService cartService, 
         IOrderService orderService, 
         IContractService contractService,
-        IBuddyService buddyService)
+        IBuddyService buddyService,
+        ICafeService cafeService)
     {
         _cartService = cartService;
         _orderService = orderService;
         _contractService = contractService;
         _buddyService = buddyService;
+        _cafeService = cafeService;
+
+        // Smart User Habit Memory: Restore preferred dining mode and packaging choices
+        _selectedOrderType = Preferences.Get("Pref_OrderType", "DineIn");
+        string savedPkg = Preferences.Get("Pref_Packaging", "StandardFree");
+        _selectedPackagingOption = Enum.TryParse<PackagingOption>(savedPkg, out var pkg) ? pkg : PackagingOption.StandardFree;
     }
 
-    partial void OnSelectedOrderTypeChanged(string value)
+    [RelayCommand]
+    public void SelectOrderType(string type)
     {
+        if (string.IsNullOrWhiteSpace(type)) return;
+        SelectedOrderType = type;
+        Preferences.Set("Pref_OrderType", type);
         OnPropertyChanged(nameof(DeliveryFee));
+        OnPropertyChanged(nameof(PackagingFee));
         OnPropertyChanged(nameof(TotalAmount));
-        OnPropertyChanged(nameof(IsPickupSelected));
-        OnPropertyChanged(nameof(IsDeliverySelected));
-        OnPropertyChanged(nameof(PerPersonShareText));
+        RecalculateSplitMath();
+    }
+
+    [RelayCommand]
+    public void SelectPackagingOption(string option)
+    {
+        if (Enum.TryParse<PackagingOption>(option, out var pkg))
+        {
+            SelectedPackagingOption = pkg;
+            Preferences.Set("Pref_Packaging", pkg.ToString());
+            OnPropertyChanged(nameof(PackagingFee));
+            OnPropertyChanged(nameof(TotalAmount));
+        }
     }
 
     [RelayCommand]
     public async Task LoadActiveContractAsync()
     {
+        try
+        {
+            int cafeId = _cartService.CafeId ?? 1;
+            var cafe = await _cafeService.GetCafeByIdAsync(cafeId);
+            if (cafe != null)
+            {
+                CafePackagingFee = cafe.TakeawayPackagingFee;
+                CafeDeliveryFee = cafe.DeliveryFee;
+            }
+        }
+        catch
+        {
+            // Fallback to defaults
+        }
+
         try
         {
             int cafeId = _cartService.CafeId ?? 1;
@@ -288,15 +362,6 @@ public partial class CheckoutViewModel : ObservableObject
         OnPropertyChanged(nameof(PerPersonShareText));
     }
 
-    [RelayCommand]
-    private void SelectOrderType(string type)
-    {
-        if (type == "Pickup" || type == "Delivery")
-        {
-            SelectedOrderType = type;
-            RecalculateSplitMath();
-        }
-    }
 
     [RelayCommand]
     private void SelectPaymentMethod(string method)
@@ -349,7 +414,8 @@ public partial class CheckoutViewModel : ObservableObject
                 Notes,
                 _cartService.Items,
                 paymentMethod,
-                SelectedCoDinerUsernames
+                SelectedCoDinerUsernames,
+                SelectedPackagingOption
             );
 
             // Clear session cart

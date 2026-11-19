@@ -101,9 +101,30 @@ public class OrderService : IOrderService
              request.DeliveryLocation.Contains("Dine-In", StringComparison.OrdinalIgnoreCase) ||
              request.DeliveryLocation.Contains("DineIn", StringComparison.OrdinalIgnoreCase));
 
-        decimal deliveryFee = isPickup ? 0.00m : cafe.DeliveryFee;
+        string orderType = !string.IsNullOrWhiteSpace(request.OrderType)
+            ? request.OrderType.Trim()
+            : (isPickup ? "Pickup" : "Delivery");
+
+        if (request.DeliveryLocation.Contains("Dine-In", StringComparison.OrdinalIgnoreCase) ||
+            request.DeliveryLocation.Contains("DineIn", StringComparison.OrdinalIgnoreCase) ||
+            orderType.Equals("DineIn", StringComparison.OrdinalIgnoreCase))
+        {
+            orderType = "DineIn";
+        }
+
+        // Delivery fee applies ONLY to Delivery orders
+        decimal deliveryFee = orderType.Equals("Delivery", StringComparison.OrdinalIgnoreCase) ? cafe.DeliveryFee : 0.00m;
+
+        // Packaging fee: DineIn is always 0 (plates). StandardFree is 0 (festal/paper). OwnContainer is 0. TakeawayBox charges cafe fee.
+        decimal packagingFee = 0.00m;
+        if (!orderType.Equals("DineIn", StringComparison.OrdinalIgnoreCase) && 
+            request.PackagingOption == PackagingOption.TakeawayBox)
+        {
+            packagingFee = cafe.TakeawayPackagingFee;
+        }
+
         decimal discountAmount = 0m;
-        decimal totalAmount = subtotal + deliveryFee;
+        decimal totalAmount = subtotal + deliveryFee + packagingFee;
 
         // 4. Meal Contract Handling (with Multi-Student Split & Smart Upgrade Math)
         StudentContract? activeContract = null;
@@ -225,7 +246,7 @@ public class OrderService : IOrderService
                 }
             }
 
-            totalAmount = totalUpgradeAndExtraCash + deliveryFee;
+            totalAmount = totalUpgradeAndExtraCash + deliveryFee + packagingFee;
 
             // Deduct from Host
             activeContract.RemainingCredits -= hostCreditsToDeduct;
@@ -255,6 +276,9 @@ public class OrderService : IOrderService
             CafeId = request.CafeId,
             Status = OrderStatus.Pending,
             PaymentMethod = request.PaymentMethod,
+            OrderType = orderType,
+            PackagingOption = request.PackagingOption,
+            PackagingFee = packagingFee,
             Subtotal = subtotal,
             DeliveryFee = deliveryFee,
             DiscountAmount = discountAmount,
@@ -529,8 +553,11 @@ public class OrderService : IOrderService
             PaymentMethod = o.PaymentMethod,
             Subtotal = o.Subtotal,
             DeliveryFee = o.DeliveryFee,
+            PackagingFee = o.PackagingFee,
             DiscountAmount = o.DiscountAmount,
             TotalAmount = o.TotalAmount,
+            OrderType = o.OrderType,
+            PackagingOption = o.PackagingOption,
             DeliveryLocation = o.DeliveryLocation,
             SpecialNotes = o.SpecialNotes,
             CreatedAt = o.CreatedAt,

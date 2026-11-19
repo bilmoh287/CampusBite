@@ -13,8 +13,11 @@ public class Order
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
     public decimal Subtotal { get; set; }
     public decimal DeliveryFee { get; set; } = 0.00m;
+    public decimal PackagingFee { get; set; } = 0.00m;
     public decimal DiscountAmount { get; set; } = 0.00m;
     public decimal TotalAmount { get; set; }
+    public string OrderType { get; set; } = "DineIn";
+    public PackagingOption PackagingOption { get; set; } = PackagingOption.StandardFree;
     public string DeliveryLocation { get; set; } = string.Empty;
     public string? SpecialNotes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

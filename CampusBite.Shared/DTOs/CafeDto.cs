@@ -8,6 +8,7 @@ public class CafeDto
     public string Location { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
     public decimal DeliveryFee { get; set; }
+    public decimal TakeawayPackagingFee { get; set; }
     public decimal MinimumOrderAmount { get; set; }
     public bool IsActive { get; set; }
     public string? Announcement { get; set; }

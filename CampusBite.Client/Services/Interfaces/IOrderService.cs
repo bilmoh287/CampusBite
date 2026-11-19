@@ -13,7 +13,8 @@ public interface IOrderService
         string? notes, 
         IEnumerable<CartItem> cartItems, 
         PaymentMethod paymentMethod = PaymentMethod.Cash,
-        IEnumerable<string>? coDinerUsernames = null);
+        IEnumerable<string>? coDinerUsernames = null,
+        PackagingOption packagingOption = PackagingOption.StandardFree);
 
     Task<List<Order>> GetOrdersAsync();
     Task<Order?> GetOrderByIdAsync(int orderId);

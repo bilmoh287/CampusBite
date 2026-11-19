@@ -9,6 +9,8 @@ public class Cafe
     public bool IsOpen { get; set; } = true;
     public string ImageUrl { get; set; } = string.Empty;
     public string? Announcement { get; set; }
+    public decimal DeliveryFee { get; set; } = 15.00m;
+    public decimal TakeawayPackagingFee { get; set; } = 25.00m;
 
     // Navigation properties
     public ICollection<Product> Products { get; set; } = new List<Product>();

@@ -375,6 +375,7 @@ public class CafeService : ICafeService
             Location = c.Location,
             LogoUrl = c.LogoUrl,
             DeliveryFee = c.DeliveryFee,
+            TakeawayPackagingFee = c.TakeawayPackagingFee,
             MinimumOrderAmount = c.MinimumOrderAmount,
             IsActive = c.IsActive,
             Announcement = c.Announcement,
